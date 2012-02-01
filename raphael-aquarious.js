@@ -135,17 +135,9 @@ Raphael.fn.simpleLine = function (cx, cy, length, angle) {
 }
 
 
-/**
- * Crea una barra horizontal formada por n niveles que representa un valor dentro
- * del rango por medio de un código de colores.
- *
- * @param paper el canvas Raphael donde se dibujará la barra
- * @param levels int el número total de niveles que tendrá la barra
- * @param value int el valor dentro del rango 0 levels-1
- * @param total_width int la anchura en píxeles de la barra
- * @return bar el objeto con la barra y sus componentes internos
- * @author Al
- */
+
+
+
 function createCounter(paper, width, height, value, options) {
     var color = options != null && options.color != null ? options.color : Aquarious.color,
         value_length = String(value).length,
@@ -170,17 +162,14 @@ function createCounter(paper, width, height, value, options) {
 
 
 
-
-
-
 /**
  * Crea una barra horizontal formada por n niveles que representa un valor dentro
- * del rango por medio de un cÃ³digo de colores.
+ * del rango por medio de un código de colores.
  *
- * @param paper el canvas Raphael donde se dibujarÃ¡ la barra
- * @param levels int el nÃºmero total de niveles que tendrÃ¡ la barra
+ * @param paper el canvas Raphael donde se dibujará la barra
+ * @param levels int el número total de niveles que tendrá la barra
  * @param value int el valor dentro del rango 0 levels-1
- * @param total_width int la anchura en pÃ­xeles de la barra
+ * @param total_width int la anchura en píxeles de la barra
  * @return bar el objeto con la barra y sus componentes internos
  * @author Al
  */
