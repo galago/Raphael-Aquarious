@@ -14,6 +14,9 @@
                 r_width = 1000;
                 r_height = 300;
                 r_height_spider = 550;
+                counter_paper1 = Raphael("holder_counter1", 200, 200),
+                counter_paper2 = Raphael("holder_counter2", 400, 400),
+                counter_paper3 = Raphael("holder_counter3", 600, 600),
                 bar_paper = Raphael("holder1", r_width, 150),
                 graph_paper = Raphael("holder2", r_width, r_height),
                 graph_paper22 = Raphael("holder22", r_width, r_height),
@@ -24,6 +27,11 @@
                 spider_paper5 = Raphael("holder5", r_width, r_height_spider),
                 spider_paper6 = Raphael("holder6", r_width, r_height_spider),
                 spider_paper7 = Raphael("holder7", r_width, r_height_spider),
+
+                
+                counter1 = createCounter(counter_paper1,200,200,7);
+                counter2 = createCounter(counter_paper2,400,400,1234,{char_size: 50});
+                counter3 = createCounter(counter_paper3,600,600,666);
 
                 bar = createBar(bar_paper, 32, 5, 900);
                 impagos_anuales_paper = Raphael("holder_impagos_anuales", 900, 330);
@@ -179,6 +187,9 @@
         </script>
     </head>
     <body>
+        <div id="holder_counter1"></div>
+        <div id="holder_counter2"></div>
+        <div id="holder_counter3"></div>
         <div id="ra_paper_1-div"></div>
         <div id="holder_impagos_anuales"></div>
         <div id="holder1"></div>
