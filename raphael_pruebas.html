@@ -15,8 +15,11 @@
                 r_height = 300;
                 r_height_spider = 550;
                 counter_paper1 = Raphael("holder_counter1", 200, 200),
-                counter_paper2 = Raphael("holder_counter2", 400, 400),
-                counter_paper3 = Raphael("holder_counter3", 600, 600),
+                counter_paper2 = Raphael("holder_counter2", 400, 300),
+                counter_paper3 = Raphael("holder_counter3", 600, 300),
+                gauge_paper1 = Raphael("holder_gauge1", 600, 300),
+                gauge_paper2 = Raphael("holder_gauge2", 400, 200),
+                gauge_paper3 = Raphael("holder_gauge3", 200, 200),
                 bar_paper = Raphael("holder1", r_width, 150),
                 graph_paper = Raphael("holder2", r_width, r_height),
                 graph_paper22 = Raphael("holder22", r_width, r_height),
@@ -30,8 +33,16 @@
 
                 
                 counter1 = createCounter(counter_paper1,200,200,7);
-                counter2 = createCounter(counter_paper2,400,400,1234,{char_size: 50});
-                counter3 = createCounter(counter_paper3,600,600,666);
+                counter2 = createCounter(counter_paper2,400,300,1234,{char_size: 50});
+                counter3 = createCounter(counter_paper3,600,300,666);
+                
+                
+                //gauge1 = createGauge(gauge_paper1,1000,400,666,{color: "#aaa"});
+                //createGauge(gauge_paper1,600,300,0.55,{color: "#EE6831"});
+                createGauge(gauge_paper1,600,300,0.55);
+                createGauge(gauge_paper2,400,200,0.1);
+                createGauge(gauge_paper3,200,200,0.8);
+                
 
                 bar = createBar(bar_paper, 32, 5, 900);
                 impagos_anuales_paper = Raphael("holder_impagos_anuales", 900, 330);
@@ -190,6 +201,9 @@
         <div id="holder_counter1"></div>
         <div id="holder_counter2"></div>
         <div id="holder_counter3"></div>
+        <div id="holder_gauge1"></div>
+        <div id="holder_gauge2"></div>
+        <div id="holder_gauge3"></div>
         <div id="ra_paper_1-div"></div>
         <div id="holder_impagos_anuales"></div>
         <div id="holder1"></div>

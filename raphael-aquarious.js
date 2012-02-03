@@ -140,24 +140,75 @@ Raphael.fn.simpleLine = function (cx, cy, length, angle) {
 
 function createCounter(paper, width, height, value, options) {
     var color = options != null && options.color != null ? options.color : Aquarious.color,
-        value_length = String(value).length,
-        fixed_size = (options != null && options.char_size != null),
-        char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
-        font = char_size+'px Helvetica, Arial',
-        counter = paper.text(width/2, height/2, value).attr({fill: color, font: font, "text-anchor": "middle"});
+    value_length = String(value).length,
+    fixed_size = (options != null && options.char_size != null),
+    char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
+    font = char_size+'px Helvetica, Arial',
+    counter = paper.text(width/2, height/2, value).attr({
+        fill: color, 
+        font: font, 
+        "text-anchor": "middle"
+    });
 
     // Reescalamos si la fuente es demasiado grande para la caja hasta que quepa en ella sin clipping
     // Da problemas de rendimiento
     if (!fixed_size) {
         do {
             font = char_size+'px Helvetica, Arial';
-            counter.attr({font: font});
+            counter.attr({
+                font: font
+            });
             char_size-=5;        
         } while (counter.getBBox().width > width || counter.getBBox().height > height);
     }
     
     return counter;
 }
+
+
+
+function createGauge(paper, width, height, value, options) {
+    var gauge, background, foreground, 
+        padding = 20,
+        radio = Math.min(width/2,height) - padding*2,
+        pos_x = width/2,
+        pos_y = height - padding,
+        stroke_width = options != null && options.stroke_width != null
+              ? options.stroke_width : radio/30,
+        easing = options != null && options.easing != null
+              ? options.easing : "<>",
+        ms_delay = options != null && options.delay != null
+                 ? options.delay : 0,
+        ms_interval = options != null && options.interval != null
+                    ? options.interval : 3000;        
+
+    paper.customAttributes.segment = function (cx, cy, r, startAngle, endAngle) {
+        var rad = Math.PI / 180,            
+            color = options != null && options.color != null
+              ? options.color : "hsb(" + ((endAngle - startAngle) / 720) + ", 1, 1)",
+            x1 = cx - r * Math.cos(-startAngle * rad),
+            x2 = cx - r * Math.cos(-endAngle * rad),
+            y1 = cy + r * Math.sin(-startAngle * rad),
+            y2 = cy + r * Math.sin(-endAngle * rad);
+        return {
+            path: ["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 1, x2, y2, "z"],
+            fill: color
+        };        
+    };    
+    
+    // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
+    value = value >= 0 && value <= 1 ? value*180 : 180;
+
+    background = paper.path().attr({segment: [pos_x, pos_y, radio, 0, 180]}).attr({"stroke-opacity": 0, fill: "#eee"});
+    foreground = paper.path().attr({segment: [pos_x, pos_y, radio, 0, 0]}).attr({"stroke-width": stroke_width, "stroke-linejoin": "round"});
+    foreground.animate(Raphael.animation({segment: [pos_x, pos_y, radio, 0, value]}, ms_interval, easing).delay(ms_delay));
+   
+   paper.
+   
+    gauge = paper.set().push(background, foreground);
+    return gauge;
+}
+
 
 
 
