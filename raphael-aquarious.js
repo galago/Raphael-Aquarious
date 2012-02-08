@@ -14,7 +14,7 @@
  */
 Aquarious = {
     lang_ui: "ES",
-    currency: 'Ä',
+    currency: '‚Ç¨',
     thousands: '.',
     decimal: ',',
     color: "#EE6831",
@@ -78,9 +78,9 @@ function formatCurrency(num,theCurrency,theThousands,theDecimal,includeTrailingC
 
 
 /**
- * FunciÛn agregada para los elementos de Raphael que devuelve las
+ * Funci√≥n agregada para los elementos de Raphael que devuelve las
  * coordenadas de cada punto de la forma
- * @warning Solo se ha probado en el elemento path pero se supone que funciona con los dem·s.
+ * @warning Solo se ha probado en el elemento path pero se supone que funciona con los dem√°s.
  *
  * @return devuelve un objeto de pares {x,y} con las coordenadas de cada punto.
  * @author Al
@@ -113,7 +113,7 @@ Raphael.el.getCornersArray = function () {
 };
 
 /**
- * FunciÛn agregada para Raphael paper que dibuja una linea horizontal o
+ * Funci√≥n agregada para Raphael paper que dibuja una linea horizontal o
  * con un angulo determinado respecto al origen
  *
  * @param cx origen x
@@ -146,8 +146,8 @@ function createCounter(paper, width, height, value, options) {
         char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
         font = char_size + "px " + Aquarious.font_family,
         counter = paper.text(width/2, height/2, formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false)).attr({
-            fill: color, 
-            font: font, 
+            fill: color,
+            font: font,
             "font-weight": "bold",
             "text-anchor": "middle"
         });
@@ -160,17 +160,17 @@ function createCounter(paper, width, height, value, options) {
             counter.attr({
                 font: font
             });
-            char_size-=5;        
+            char_size-=5;
         } while (counter.getBBox().width > width || counter.getBBox().height > height);
     }
-    
+
     return counter;
 }
 
 
 
 function createGauge(paper, width, height, value, options) {
-    var gauge, background, foreground, caption, 
+    var gauge, background, foreground, caption,
         have_caption = options != null && options.no_caption != null && options.no_caption == true
                     ? false : true,
         // Si hay caption dejamos un 25% de la altura para pintarlo
@@ -179,7 +179,7 @@ function createGauge(paper, width, height, value, options) {
         radius = Math.min(width/2,gauge_height) - padding*2,
         pos_x = width/2,
         pos_y = radius + padding,
-        percent_value = Math.round(value * 100),        
+        percent_value = Math.round(value * 100),
 //        stroke_width = options != null && options.stroke_width != null
 //              ? options.stroke_width : radius/30,
         easing = options != null && options.easing != null
@@ -192,10 +192,10 @@ function createGauge(paper, width, height, value, options) {
                     ? options.label : "";
     // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
     value = value >= 0 && value <= 1 ? value*180 : 180;
-        
-    
+
+
     paper.customAttributes.segment = function (cx, cy, r, startAngle, endAngle) {
-        var rad = Math.PI / 180,            
+        var rad = Math.PI / 180,
             color = options != null && options.color != null
               ? options.color : "hsb(" + ((endAngle - startAngle) / 720) + ", 1, 1)",
             x1 = cx - r * Math.cos(-startAngle * rad),
@@ -206,8 +206,8 @@ function createGauge(paper, width, height, value, options) {
             path: ["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 1, x2, y2, "z"],
             fill: color
         };
-    };    
-    
+    };
+
     background = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 180]}).attr({"stroke-opacity": 0, fill: "#EEE"});
     foreground = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 0]}).attr({"stroke-opacity": 0, "stroke-linejoin": "round"});
     foreground.animate(Raphael.animation({segment: [pos_x, pos_y, radius, 0, value]}, ms_interval, easing).delay(ms_delay));
@@ -217,12 +217,12 @@ function createGauge(paper, width, height, value, options) {
         var font = char_size+ "px " + Aquarious.font_family,
             color = "#CCC";
         caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
-            fill: color, 
+            fill: color,
             font: font,
             "text-anchor": "middle"
         });
     }
-    
+
     gauge = paper.set().push(background, foreground, caption);
     return gauge;
 }
@@ -233,12 +233,12 @@ function createGauge(paper, width, height, value, options) {
 
 /**
  * Crea una barra horizontal formada por n niveles que representa un valor dentro
- * del rango por medio de un cÛdigo de colores.
+ * del rango por medio de un c√≥digo de colores.
  *
- * @param paper el canvas Raphael donde se dibujar· la barra
- * @param levels int el n˙mero total de niveles que tendr· la barra
+ * @param paper el canvas Raphael donde se dibujar√° la barra
+ * @param levels int el n√∫mero total de niveles que tendr√° la barra
  * @param value int el valor dentro del rango 0 levels-1
- * @param total_width int la anchura en pÌxeles de la barra
+ * @param total_width int la anchura en p√≠xeles de la barra
  * @return bar el objeto con la barra y sus componentes internos
  * @author Al
  */
@@ -258,7 +258,7 @@ function createBar(paper, levels, value, total_width) {
     pointer,
     anim;
 
-    // Dibuja la barra con tantos rect·ngulos como levels
+    // Dibuja la barra con tantos rect√°ngulos como levels
     for (i=0;i<levels;i++) {
         bar[i] = paper.rect(x, y, rect_width, rect_height, rect_corner_radius)
         .attr({
@@ -294,17 +294,17 @@ function createBar(paper, levels, value, total_width) {
 
 
 /**
- * Crea una gr·fica de dos ejes x,y. El eje x acetpa valores continuos pero no asÌ el eje y
+ * Crea una gr√°fica de dos ejes x,y. El eje x acetpa valores continuos pero no as√≠ el eje y
  *
- * @param paper Paper el canvas Raphael donde se dibujar· la barra
- * @param width int la anchura en pÌxeles de la gr·fica
- * @param height int la altura en pÌxeles de la gr·fica
- * @param values (polimorfico) array con pares {x,y} que representan los valores en la gr·gica
+ * @param paper Paper el canvas Raphael donde se dibujar√° la barra
+ * @param width int la anchura en p√≠xeles de la gr√°fica
+ * @param height int la altura en p√≠xeles de la gr√°fica
+ * @param values (polimorfico) array con pares {x,y} que representan los valores en la gr√°gica
  *                              OR
  *                             array de arrays con pares {x,y} para dibujar multiples funciones en el mismo eje
  * @param options object (opcional){
- *            value_text String el texto que saldr· en el popup relacionado con los valores
- *            economy boolean si es {@code true} crear· la gr·fica para valores de moneda
+ *            value_text String el texto que saldr√° en el popup relacionado con los valores
+ *            economy boolean si es {@code true} crear√° la gr√°fica para valores de moneda
  *                    con saltos proporcionales de 500,1000,5000,10000... como techo del eje x
  *            economy_max int el valor maximo antes de pasar a saltos proporcionales como techo del eje x
  *            no_fill boolean si es {@code true} NO pintara un relleno semitransparente bajo la linea del valor al origen
@@ -316,7 +316,7 @@ function createBar(paper, levels, value, total_width) {
  *            ms_interval int numero de milisegundos entre cada nuevo trazo
  *            delay int numero de milisegundos que tarda la animacion en comenzar
  *
- * @return graph el objeto con la gr·fica y sus componentes internos
+ * @return graph el objeto con la gr√°fica y sus componentes internos
  * @author Al
  */
 function create2AxisGraph (paper, width, height, values, options) {
@@ -405,7 +405,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         default:
             in_text = " in";
     }
-    // Detectamos los m·ximos en funciÛn de los valores de entrada y se amplian en un pequeÒo margen
+    // Detectamos los m√°ximos en funci√≥n de los valores de entrada y se amplian en un peque√±o margen
     // Tambien rellenamos el array con todos los posibles valores del eje x
     for (fun=0;fun<values.length;fun++) {
         for (i=0;i<values[fun].length;i++) {
@@ -415,10 +415,10 @@ function create2AxisGraph (paper, width, height, values, options) {
             if (!inArray(values_x,values[fun][i].x)) values_x.push(values[fun][i].x);
         }
     }
-    values_x.sort();    
+    values_x.sort();
 
-    /* Si la gr·fica es de valores monetarios los m·rgenes m·ximos
-     * estar·n predefinidos para tener un look&feel consistente.
+    /* Si la gr√°fica es de valores monetarios los m√°rgenes m√°ximos
+     * estar√°n predefinidos para tener un look&feel consistente.
      */
     if (economy) {
         gaps_y = 5;
@@ -433,14 +433,14 @@ function create2AxisGraph (paper, width, height, values, options) {
             if (max_y >= ceiling) ceiling*=2;
         }
     }
-    // En el resto de casos el m·ximo tendr· un margen del 20% sobre el valor m·ximo.
+    // En el resto de casos el m√°ximo tendr√° un margen del 20% sobre el valor m√°ximo.
     else {
         gaps_y = 6;
         ceiling = (max_y == 0) ? 6:Math.ceil(max_y*1.2);
         while((typeof((ceiling/gaps_y))=='number') && ((ceiling/gaps_y).toString().indexOf('.')!=-1)) ceiling++;
     }
 
-    // Dibuja las lÌneas de referencia para el eje y
+    // Dibuja las l√≠neas de referencia para el eje y
     x_margin = x_margin*(String(ceiling).length);
     x_graph = x_margin+12;
     graph_width = width - x_graph;
@@ -460,26 +460,26 @@ function create2AxisGraph (paper, width, height, values, options) {
             "stroke-width": line_stroke_width
         });
     }
-    horizontal_axis_lines = paper.setFinish(); 
-                  
+    horizontal_axis_lines = paper.setFinish();
+
     // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__graph_width__|_
-    graph_width -= graph_width*.10;  
-    // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores, 
+    graph_width -= graph_width*.10;
+    // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores,
     // el tamanio del grafico y la longitud del string de referencia. (un char 14px de media 7.5px wide)
-    gaps_x = Math.floor(graph_width / (values_x[values_x.length-1].toString().length*10)); 
+    gaps_x = Math.floor(graph_width / (values_x[values_x.length-1].toString().length*10));
     if (gaps_x > values_x.length) gaps_x = values_x.length;
     gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
-   
-    // Dibuja las lÌneas de referencia para el eje x adem·s de las lÌneas del gr·fico en funciÛn de las funciones y sus valores
+
+    // Dibuja las l√≠neas de referencia para el eje x adem√°s de las l√≠neas del gr√°fico en funci√≥n de las funciones y sus valores
     for (fun=0;fun<values.length;fun++) {
         dots[fun] = [];
         paths[fun] = [];
         over_areas[fun] = [];
-        
-        x = x_graph + graph_width*.05 - graph_width/(values[fun].length-1); 
-        
+
+        x = x_graph + graph_width*.05 - graph_width/(values[fun].length-1);
+
         for (i=0;i<values[fun].length;i++) {
-            x += graph_width/(values[fun].length-1);    
+            x += graph_width/(values[fun].length-1);
             //x = x_graph + graph_width/values[fun].length*i + x_margin;
             // En la primera pasada dibujamos el eje x
             if (fun == 0) {
@@ -491,7 +491,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     });
                 }
             }
-            // Dibuja la linea de la gr·fica
+            // Dibuja la linea de la gr√°fica
             y_value = y_graph + Math.abs(graph_height - (graph_height/ceiling)*values[fun][i].y);
             if (i < values[fun].length-1) {
                 path_string[i] = "M"+x+" "+y_value+" L";
@@ -610,7 +610,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                 r: function_dot_width
             }, 1000, 'elastic').delay(ms_delay));
             ms_delay+=ms_interval;
-            // Dibuja un rect·ngulo transparente para gestionar los eventos over
+            // Dibuja un rect√°ngulo transparente para gestionar los eventos over
             if (multifun) {
                 over_areas[fun][i] = paper.rect(x-(over_rect_width/2), y_value-8, over_rect_width, 16)
                 .attr({
@@ -711,7 +711,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                         is_label_visible = false;
                     }, 1);
                 });
-            })(x, y_value, i, fun);    
+            })(x, y_value, i, fun);
         }
 
         // Dibuja el relleno del path de la funcion al eje
@@ -768,16 +768,16 @@ function create2AxisGraph (paper, width, height, values, options) {
 }
 
 /**
- * Dibuja la araÒa en funciÛn al n˙mero de valores y al n˙mero de niveles posibles.
- * A continuaciÛn dibuja la funciÛn del gr·fico.
+ * Dibuja la ara√±a en funci√≥n al n√∫mero de valores y al n√∫mero de niveles posibles.
+ * A continuaci√≥n dibuja la funci√≥n del gr√°fico.
  *
  * @param paper the Raphael paper holder
- * @param labels String[] La forma geomÈtrica tendr· tantos lados como el numero de etiquetas
- * @param values int[] El rango de {@code 0} a {@code values} de valores posibles que cada nivel podr· tener
- * @param max_value int El valor m·ximo de la funciÛn, si alg˙n valor del array lo supera se redondear· a este
+ * @param labels String[] La forma geom√©trica tendr√° tantos lados como el numero de etiquetas
+ * @param values int[] El rango de {@code 0} a {@code values} de valores posibles que cada nivel podr√° tener
+ * @param max_value int El valor m√°ximo de la funci√≥n, si alg√∫n valor del array lo supera se redondear√° a este
  * @param options object (opcional){
- *            value_text String el texto que saldr· en el popup relacionado con los valores
- *            growing_interval int la distancia en pÌxeles de un valor a otro
+ *            value_text String el texto que saldr√° en el popup relacionado con los valores
+ *            growing_interval int la distancia en p√≠xeles de un valor a otro
  *            function_line_colors (si se usan varias funciones es obligatorio) array de Strings con los colores de cada linea en #rgbhex
  *            function_line_width number el grosor de las lineas de funcion
  *            function_dot_width numberel grosor de los puntos de funcion
@@ -817,7 +817,7 @@ function createSpider(paper, labels, values, max_value, options) {
     },
     text_align = "middle";
     for (i=0;i<max_value;i++) {
-        // Raphael:: dibuja tantos polÌgonos como niveles, cada uno con un radio mayor
+        // Raphael:: dibuja tantos pol√≠gonos como niveles, cada uno con un radio mayor
         polygon_radius+=interval;
         polygons.push(paper.polygon(origin_x, origin_y, polygon_radius, levels)
             .attr({
@@ -828,7 +828,7 @@ function createSpider(paper, labels, values, max_value, options) {
     }
     paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
 
-    // Sacamos las coordenadas de un polÌgno mayor para dibujar las etiquetas y las lÌneas de nivel
+    // Sacamos las coordenadas de un pol√≠gno mayor para dibujar las etiquetas y las l√≠neas de nivel
     line_origin_coord = paper.polygon(origin_x, origin_y, polygon_radius, levels).hide().getCornersArray();
     for (i=0;i<levels;i++) {
         // Raphael:: dibuja las lineas horizontales por cada nivel.
@@ -854,7 +854,7 @@ function createSpider(paper, labels, values, max_value, options) {
     spider.max_value = max_value;
 
 
-    // Dibuja el gr·fico de la funciÛn
+    // Dibuja el gr√°fico de la funci√≥n
     var j, coord_x, coord_y,
     level,
     shape,
@@ -881,7 +881,7 @@ function createSpider(paper, labels, values, max_value, options) {
     value_text = options != null && options.value_text != null
     ? " "+options.value_text : "",
     popup_background = options != null && options.popup_background != null
-    ? options.popup_background : "#000", 
+    ? options.popup_background : "#000",
     popup_opacity = options != null && options.popup_opacity != null
     ? options.popup_opacity : .7,
     leave_timer, is_label_visible = false,
@@ -1155,8 +1155,8 @@ function createSpider(paper, labels, values, max_value, options) {
                 // si es impar tan solo cambiamos el grosor de la linea que corresponde para superponerla con las pares
                 if (number_lines > 1 && number_lines%2 == 1) {
                     path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", shape_points_array[fun][i-1].x, shape_points_array[fun][i-1].y, shape_points_array[fun][j].x, shape_points_array[fun][j].y);
-                                  
-                }                
+
+                }
             }
         }
 
