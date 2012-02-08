@@ -18,6 +18,7 @@ Aquarious = {
     thousands: '.',
     decimal: ',',
     color: "#EE6831",
+    font_family: 'Helvetica, Arial',
     txt: {
         font: '14px Helvetica, Arial',
         fill: "#fff"
@@ -140,21 +141,22 @@ Raphael.fn.simpleLine = function (cx, cy, length, angle) {
 
 function createCounter(paper, width, height, value, options) {
     var color = options != null && options.color != null ? options.color : Aquarious.color,
-    value_length = String(value).length,
-    fixed_size = (options != null && options.char_size != null),
-    char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
-    font = char_size+'px Helvetica, Arial',
-    counter = paper.text(width/2, height/2, value).attr({
-        fill: color, 
-        font: font, 
-        "text-anchor": "middle"
-    });
+        value_length = String(value).length,
+        fixed_size = (options != null && options.char_size != null),
+        char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
+        font = char_size + "px " + Aquarious.font_family,
+        counter = paper.text(width/2, height/2, formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false)).attr({
+            fill: color, 
+            font: font, 
+            "font-weight": "bold",
+            "text-anchor": "middle"
+        });
 
     // Reescalamos si la fuente es demasiado grande para la caja hasta que quepa en ella sin clipping
-    // Da problemas de rendimiento
+    // Da problemas de rendimiento"font-weight": 5,
     if (!fixed_size) {
         do {
-            font = char_size+'px Helvetica, Arial';
+            font = char_size + "px " + Aquarious.font_family;
             counter.attr({
                 font: font
             });
@@ -168,20 +170,30 @@ function createCounter(paper, width, height, value, options) {
 
 
 function createGauge(paper, width, height, value, options) {
-    var gauge, background, foreground, 
+    var gauge, background, foreground, caption, 
+        have_caption = options != null && options.no_caption != null && options.no_caption == true
+                    ? false : true,
+        // Si hay caption dejamos un 25% de la altura para pintarlo
+        gauge_height = have_caption ? height * 0.85 : height,
         padding = 20,
-        radio = Math.min(width/2,height) - padding*2,
+        radius = Math.min(width/2,gauge_height) - padding*2,
         pos_x = width/2,
-        pos_y = height - padding,
-        stroke_width = options != null && options.stroke_width != null
-              ? options.stroke_width : radio/30,
+        pos_y = radius + padding,
+        percent_value = Math.round(value * 100),        
+//        stroke_width = options != null && options.stroke_width != null
+//              ? options.stroke_width : radius/30,
         easing = options != null && options.easing != null
               ? options.easing : "<>",
         ms_delay = options != null && options.delay != null
                  ? options.delay : 0,
         ms_interval = options != null && options.interval != null
-                    ? options.interval : 3000;        
-
+                    ? options.interval : 3000,
+        label = options != null && options.label != null
+                    ? options.label : "";
+    // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
+    value = value >= 0 && value <= 1 ? value*180 : 180;
+        
+    
     paper.customAttributes.segment = function (cx, cy, r, startAngle, endAngle) {
         var rad = Math.PI / 180,            
             color = options != null && options.color != null
@@ -193,19 +205,25 @@ function createGauge(paper, width, height, value, options) {
         return {
             path: ["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 1, x2, y2, "z"],
             fill: color
-        };        
+        };
     };    
     
-    // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
-    value = value >= 0 && value <= 1 ? value*180 : 180;
-
-    background = paper.path().attr({segment: [pos_x, pos_y, radio, 0, 180]}).attr({"stroke-opacity": 0, fill: "#eee"});
-    foreground = paper.path().attr({segment: [pos_x, pos_y, radio, 0, 0]}).attr({"stroke-width": stroke_width, "stroke-linejoin": "round"});
-    foreground.animate(Raphael.animation({segment: [pos_x, pos_y, radio, 0, value]}, ms_interval, easing).delay(ms_delay));
-   
-   paper.
-   
-    gauge = paper.set().push(background, foreground);
+    background = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 180]}).attr({"stroke-opacity": 0, fill: "#EEE"});
+    foreground = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 0]}).attr({"stroke-opacity": 0, "stroke-linejoin": "round"});
+    foreground.animate(Raphael.animation({segment: [pos_x, pos_y, radius, 0, value]}, ms_interval, easing).delay(ms_delay));
+    if (have_caption) {
+        var char_size = radius * 0.25;
+            if (char_size < 20) char_size = 20;
+        var font = char_size+ "px " + Aquarious.font_family,
+            color = "#CCC";
+        caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
+            fill: color, 
+            font: font,
+            "text-anchor": "middle"
+        });
+    }
+    
+    gauge = paper.set().push(background, foreground, caption);
     return gauge;
 }
 
