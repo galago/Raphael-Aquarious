@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Raphaël · Animated Chart</title>
+
+        <script src="raphael-min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="raphael.primitives.js" type="text/javascript" charset="utf-8"></script>
+        <script src="raphael-aquarious.js" type="text/javascript" charset="utf-8"></script>
+        <script src="popup.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" charset="utf-8">
+            window.onload = function () {
+
+                r_width = 1000;
+                r_height = 300;
+                r_height_spider = 550;
+                counter_paper1 = Raphael("holder_counter1", 200, 200),
+                counter_paper2 = Raphael("holder_counter2", 400, 300),
+                counter_paper3 = Raphael("holder_counter3", 600, 300),
+                gauge_paper1 = Raphael("holder_gauge1", 600, 300),
+                gauge_paper2 = Raphael("holder_gauge2", 400, 200),
+                gauge_paper3 = Raphael("holder_gauge3", 200, 200),
+                bar_paper = Raphael("holder1", r_width, 150),
+                graph_paper = Raphael("holder2", r_width, r_height),
+                graph_paper22 = Raphael("holder22", r_width, r_height),
+                graph_paper23 = Raphael("holder23", r_width, r_height),
+                graph_paper43 = Raphael("holder43", r_width, r_height),
+                spider_paper = Raphael("holder3", r_width, r_height_spider),
+                spider_paper4 = Raphael("holder4", r_width, r_height_spider),
+                spider_paper5 = Raphael("holder5", r_width, r_height_spider),
+                spider_paper6 = Raphael("holder6", r_width, r_height_spider),
+                spider_paper7 = Raphael("holder7", r_width, r_height_spider),
+
+                
+                counter1 = createCounter(counter_paper1,200,200,7);
+                counter2 = createCounter(counter_paper2,400,300,1234,{char_size: 50});
+                counter3 = createCounter(counter_paper3,600,300,666);
+                
+                
+                //gauge1 = createGauge(gauge_paper1,1000,400,666,{color: "#aaa"});
+                //createGauge(gauge_paper1,600,300,0.55,{color: "#EE6831"});
+                createGauge(gauge_paper1,600,300,0.55,{label: "complete"});
+                createGauge(gauge_paper2,400,200,0.85);
+                createGauge(gauge_paper3,200,200,0.1);
+                
+
+                bar = createBar(bar_paper, 32, 5, 900);
+                impagos_anuales_paper = Raphael("holder_impagos_anuales", 900, 330);
+
+                ra_paper_1 = Raphael('ra_paper_1-div', 400, 300);
+                create2AxisGraph(ra_paper_1, 300, 300, [[{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}]], {
+                    "function_line_colors":["#FF3300"],
+                    "popup_background":"#E0E0E0",
+                    "economy_max":500,
+                    "function_line_width":3,
+                    "function_dot_width":0,
+                    "no_fill": false,
+                    "interval":0
+                });
+
+
+                create2AxisGraph (impagos_anuales_paper, 900, 250, [[{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}]],{value_text: "impago",             function_line_colors:["#FA3834","#3494FA"],              delay: 2000,             interval: 50,             function_line_width: 8,              function_dot_width: 7,             no_fill:true         });         impagos_anuales_paper.safari();
+
+                graph_values = [{x:2007, y:10},{x:2008, y:35},{x:2009, y:45},{x:2010, y:77},{x:2011, y:300}];
+                graph_values = [{x:2005, y:25},{x:2006, y:35},{x:2007, y:68},{x:2008, y:89},{x:2009, y:160},{x:2010, y:405},{x:2011, y:952}];
+                graph = create2AxisGraph (graph_paper, r_width, r_height, graph_values, {
+
+                });
+
+
+
+                graph_values = [[{x:2005, y:961 },{x:2006, y:22312333},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}],
+                    [{x:2005, y:213 },{x:2006, y:233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:0},{x:2010, y:523},{x:2011, y:89}]];
+                //graph_values = [{x:0, y:15},{x:1, y:20},{x:2, y:30},{x:3, y:80}];
+                //graph_values = [{x:2007, y:0},{x:2008, y:6},{x:2009, y:1},{x:2010, y:3},{x:2011, y:5}];
+                graph = create2AxisGraph (graph_paper22, r_width, r_height, graph_values, {
+                    economy: true,
+                    economy_max: 500,
+                    function_line_width: 8,
+                    function_dot_width: 7,
+                    function_line_colors:["#288DFA","#FA2B28"],
+                    function_line_colors:["#3494FA","#FA3834"],
+                    popup_background: "#999",
+                    no_fill: true
+                });
+
+                graph_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
+                    [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
+                    [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]];
+                graph = create2AxisGraph (graph_paper23, r_width, r_height, graph_values, {
+                    economy: true,
+                    economy_max: 500,
+                    function_line_width: 9,
+                    function_dot_width: 7,
+                    function_line_colors:["#91FF22","#2190FF","#FF2190"],
+                    no_fill: true,
+                    delay: 2000,
+                    interval: 100
+                });
+
+
+                //                graph_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
+                //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
+                //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
+                //                                [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]];
+                //                graph = create2AxisGraph (graph_paper43, 800, 300, graph_values, {
+                //                    economy: true,
+                //                    economy_max: 500,
+                //                    function_line_width: 9,
+                //                    function_dot_width: 7,
+                //                    function_line_colors:["#EA0063","#EA8600","#00EA86","#0063EA"],
+                //                    no_fill: true,
+                //                    delay: 3000,
+                //                    interval: 600
+                //                });
+
+                graph_values = [{x:2005, y:26001 },{x:2006, y:23},{x:2007, y:5012222},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}];
+                //graph = create2AxisGraph (graph_paper23, 800, 300, graph_values, {economy: true, economy_max: 500});
+
+                spider_labels = ["Alquileres",
+                    "Financiación\nEmpresarial",
+                    "Financiación\nPersonal",
+                    "Hipotecas",
+                    "Otros",
+                    "Seguros",
+                    "Tarjetas",
+                    "Telecomunicaciones"];
+                spider_values = [[0,0,0,0,0,0,0,0],
+                    [1,1,1,1,1,1,1,1],
+                    [2,2,2,2,2,2,2,2],
+                    [3,3,3,3,3,3,3,3],
+                    [4,4,4,4,4,4,4,4],
+                    [5,5,5,5,5,5,5,5]];
+                //spider_values = [0,0,0,0,0,0,0,0];
+
+                //spider_values = [1,0,1,0,1,0,1,5];
+                spider = createSpider(spider_paper,spider_labels,spider_values,5,{
+                    value_text: "impago",
+                    function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
+                    no_fill: true
+                });
+
+                spider_labels = ["Alquileres",
+                    "Financiación\nEmpresarial",
+                    "Financiación\nPersonal",
+                    "Hipotecas",
+                    "Otros"];
+                spider_values = [[9,5,3,4,8],
+                    [6,5,5,4,8]];
+                createSpider(spider_paper4,spider_labels,spider_values,6,{
+                    value_text: "cacharro",
+                    function_line_width: 9,
+                    function_dot_width: 7,                                                               
+                    function_line_colors:["#FDD12A","#F00402"],
+                    no_fill: true
+                });
+
+                spider_labels = ["Alquileres",
+                    "Financiación\nEmpresarial",
+                    "Financiación\nPersonal"];
+                spider_values = [2,8,2];
+                createSpider(spider_paper5,spider_labels,spider_values,3,{value_text: "novia"});
+
+                spider_labels = ["Alquileres",
+                    "Financiación\nEmpresarial",
+                    "Financiación\nPersonal",
+                    "Hipotecas",
+                    "Otros",
+                    "Seguros",
+                    "Tarjetas",
+                    "Hipotecas",
+                    "Otros",
+                    "Seguros",
+                    "Tarjetas"];
+                spider_values = [[2,3,5,6,9,82,1,15,8,9,8],
+                    [2,3,5,6,9,82,1,15,8,9,8]];
+                createSpider(spider_paper6,spider_labels,spider_values,6,{value_text: "impago",function_line_width: 9,
+                    function_line_colors:["#91FF22","#2190FF","#FF2190"],
+                    no_fill: true
+                });
+
+                spider_labels = ["Alquileres",
+                    "Financiación\nEmpresarial",
+                    "Financiación\nPersonal",
+                    "Hipotecas"];
+                spider_values = [4,3,5,6];
+                createSpider(spider_paper7,spider_labels,spider_values,6,{
+                    value_text: "impago",
+                    function_dot_width: 0
+                });
+
+
+                //r.getElementByPoint(mouseX, mouseY).attr({stroke: "#f00"});
+                bar_paper.safari();
+                graph_paper.safari();
+                spider_paper.safari();
+            };
+        </script>
+    </head>
+    <body>
+        <div id="holder_counter1"></div>
+        <div id="holder_counter2"></div>
+        <div id="holder_counter3"></div>
+        <div id="holder_gauge1"></div>
+        <div id="holder_gauge2"></div>
+        <div id="holder_gauge3"></div>
+        <div id="ra_paper_1-div"></div>
+        <div id="holder_impagos_anuales"></div>
+        <div id="holder1"></div>
+        <div id="holder2"></div>
+        <div id="holder22"></div>
+        <div id="holder23"></div>
+        <div id="holder43"></div>
+        <div id="holder3"></div>
+        <div id="holder4"></div>
+        <div id="holder5"></div>
+        <div id="holder6"></div>
+        <div id="holder7"></div>
+    </body>
+</html>
