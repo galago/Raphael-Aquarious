@@ -33,6 +33,7 @@ Aquarious = {
     }
 }
 
+
 /*
  * Returns true if the passed value is found in the
  * array. Returns false if it is not.
@@ -139,19 +140,206 @@ Raphael.fn.simpleLine = function (cx, cy, length, angle) {
 
 
 
-function createCounter(paper, width, height, value, options) {
-    var color = options != null && options.color != null ? options.color : Aquarious.color,
-        value_length = String(value).length,
-        fixed_size = (options != null && options.char_size != null),
-        char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
-        font = char_size + "px " + Aquarious.font_family,
-        counter = paper.text(width/2, height/2, formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false)).attr({
+
+
+
+
+
+/* Popup object defaults */
+function Popup() {
+    this.background_color;
+    this.background_opacity;
+
+}
+
+
+function Options(options) {
+    this.type;
+    this.id_holder;
+    // Data
+    this.value;
+    // Size
+    this.width;
+    this.height;
+    // Style
+    this.color;
+    this.color_alt;
+    // Animation
+    this.easing;
+    this.delay;
+    this.interval;
+    // Popup
+    this.popup_background_color;
+    this.popup_background_opacity;
+    
+    // Flags
+    this.has_popup;
+    this.has_animation;
+    
+    this.toString = function() {
+        var string = "Options\n";
+        for (var i=0;i<this.length;i++) {
+            string += this[i];
+        }
+        return "Common Options\n" +
+        " type: " + this.type + "\n" +
+        " id_holder: " + this.id_holder + "\n" +
+        " value: " + this.value + "\n" +
+        " width: " + this.width + "\n" +
+        " height: " + this.height + "\n" +
+        " color: " + this.color + "\n" +
+        " color_alt: " + this.color_alt + "\n" +
+        " easing: " + this.easing + "\n" +
+        " delay: " + this.delay + "\n" +
+        " interval: " + this.interval + "\n" +
+        " popup_background_color: " + this.popup_background_color + "\n" +
+        " popup_background_opacity: " + this.popup_background_opacity + "\n" +
+        " has_popup: " + this.has_popup + "\n" +
+        " has_animation: " + this.has_animation + "\n" +
+        " value: " + this.type;
+    
+    }
+    this.constructor = function() {
+        /* Common Options */
+        if (options == null) throw "RaphaelAquarious: missing arguments";
+        /* Needed */
+        if (options.type != null && options.id_holder != null ) {
+            this.type = options.type;
+            this.id_holder = options.id_holder;
+        } else throw "RaphaelAquarious: missing options";
+        
+        /* Optional with default values*/
+        // Data
+        this.value = options.value != null ? options.value : 0;
+        // Size
+        this.width = options.width != null ? options.width : 400;
+        this.height = options.height != null ? options.height : 400;
+        // Style
+        this.color = options.color != null ? options.color : null;
+        this.color_alt = options.color_alt != null ? options.color_alt : null;
+        // Animation
+        this.easing = options.easing != null ? options.easing : "<>";
+        this.delay = options.delay != null ? options.delay : 0;
+        this.interval = options.interval != null ? options.interval : 0;
+        // Popup
+        this.popup_background_color = options.popup_background_color != null ? options.popup_background_color : "#000";
+        this.popup_background_opacity = options.popup_background_opacity != null ? options.popup_background_opacity : .7;
+        // Flags
+        this.has_popup = options.has_popup != null ? options.has_popup : true;
+        this.has_animation = options.has_animation != null ? options.has_animation : true;
+        
+        /* Individual Options */
+        switch (this.type) {
+            // Counter
+            case "counter":
+                this.char_size = options.char_size != null ? options.char_size : null;
+                break;
+            case "gauge":
+                this.has_caption = options.has_caption != null ? options.has_caption : true;
+                this.label = options.label != null ? options.label : "";
+                break;
+            case "___template":
+                this._______ = options._______ != null ? options._______ : null;
+                break;
+            default:
+                throw "RaphaelAquarious: unknown widget type";
+        }        
+    }
+    
+    /* Constructor */
+    this.constructor();   
+    return this;
+}
+
+function Widget(options) {
+    this.options;
+    this.paper;
+    this.popup;
+    this.svg;
+    
+    this.factory = function() {
+        
+        switch (this.options.type) {
+            case "counter":
+                return drawCounter(this);
+                break;
+            case "gauge":
+                return createGauge(this);
+                break;
+        }
+    }
+    this.updateValue = function(new_value) {
+        this.options.value = new_value;        
+        this.factory();
+        return this;
+    }    
+    this.update = function(options) {
+        if (options != null) this.options = new Options(options);    
+        this.svg = this.factory(this.options);
+        return this;
+    }    
+    
+    this.constructor = function () {
+        this.options = new Options(options);    
+        this.paper = Raphael(this.options.id_holder, this.options.width, this.options.height);
+        this.popup = (this.options.has_popup) ? new Popup(this.options) : null;
+        this.factory(options);        
+    }
+    /* Constructor */
+    this.constructor();
+    return this;
+}
+
+
+
+/**
+ *  options.color
+ *  options.char_size
+ */
+function drawCounter(widget) { 
+    var counter = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    value = opt.value,
+    
+    color = opt.color != null ? opt.color : Aquarious.color,
+    value_length = String(value).length,
+    fixed_size = opt.char_size != null,
+    char_size = fixed_size ? opt.char_size : Math.round(width*2/value_length),
+    font = char_size + "px " + Aquarious.font_family,
+    output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
+    
+    // Create or update
+    if (counter == null) {
+        counter = paper.text(width/2, height/2, output_value).attr({
             fill: color,
             font: font,
             "font-weight": "bold",
             "text-anchor": "middle"
         });
-
+    } else { 
+        if (opt.has_animation) {
+            var duration = opt.interval > 0 ? opt.interval : 300;
+            counter.animate(Raphael.animation({
+                opacity: 0
+            }, duration, opt.easing, function() {
+                counter.attr({
+                    text: output_value
+                }).animate(Raphael.animation({
+                    opacity: 1
+                }, duration, opt.easing).delay(opt.delay));    
+            }).delay(opt.delay));  
+        
+        
+        } else {
+            counter.attr({
+                text: output_value
+            });
+        }
+    }
+    
     // Reescalamos si la fuente es demasiado grande para la caja hasta que quepa en ella sin clipping
     // Da problemas de rendimiento"font-weight": 5,
     if (!fixed_size) {
@@ -163,68 +351,115 @@ function createCounter(paper, width, height, value, options) {
             char_size-=5;
         } while (counter.getBBox().width > width || counter.getBBox().height > height);
     }
-
-    return counter;
+    
+    widget.svg = counter;   
+    return widget;
 }
 
 
-
-function createGauge(paper, width, height, value, options) {
-    var gauge, background, foreground, caption,
-        have_caption = options != null && options.no_caption != null && options.no_caption == true
-                    ? false : true,
-        // Si hay caption dejamos un 25% de la altura para pintarlo
-        gauge_height = have_caption ? height * 0.85 : height,
-        padding = 20,
-        radius = Math.min(width/2,gauge_height) - padding*2,
-        pos_x = width/2,
-        pos_y = radius + padding,
-        percent_value = Math.round(value * 100),
-//        stroke_width = options != null && options.stroke_width != null
-//              ? options.stroke_width : radius/30,
-        easing = options != null && options.easing != null
-              ? options.easing : "<>",
-        ms_delay = options != null && options.delay != null
-                 ? options.delay : 0,
-        ms_interval = options != null && options.interval != null
-                    ? options.interval : 3000,
-        label = options != null && options.label != null
-                    ? options.label : "";
+/**
+ *  options.color
+ *  options.no_caption
+ *  options.easing
+ *  options.delay
+ *  options.interval
+ *  options.label
+ **/
+function createGauge(widget) {
+    var gauge = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    value = opt.value,
+    
+    background, foreground, caption,
+    has_caption = opt.has_caption,
+    // Si hay caption dejamos un 25% de la altura para pintarlo
+    gauge_height = has_caption ? height * 0.85 : height,
+    padding = 20,
+    radius = Math.min(width/2,gauge_height) - padding*2,
+    pos_x = width/2,
+    pos_y = radius + padding,
+    percent_value = Math.round(value * 100),
+    //        stroke_width = opt != null && opt.stroke_width != null
+    //              ? opt.stroke_width : radius/30,
+    
+    // Animation
+    easing = opt.easing,
+    ms_delay = opt.delay,
+    ms_interval = opt.interval!=0 ? opt.interval: 3000,
+    label = opt.label;
     // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
     value = value >= 0 && value <= 1 ? value*180 : 180;
-
-
+    
+    
     paper.customAttributes.segment = function (cx, cy, r, startAngle, endAngle) {
         var rad = Math.PI / 180,
-            color = options != null && options.color != null
-              ? options.color : "hsb(" + ((endAngle - startAngle) / 720) + ", 1, 1)",
-            x1 = cx - r * Math.cos(-startAngle * rad),
-            x2 = cx - r * Math.cos(-endAngle * rad),
-            y1 = cy + r * Math.sin(-startAngle * rad),
-            y2 = cy + r * Math.sin(-endAngle * rad);
+        color = opt.color != null ? opt.color : "hsb(" + ((endAngle - startAngle) / 720) + ", 1, 1)",
+        x1 = cx - r * Math.cos(-startAngle * rad),
+        x2 = cx - r * Math.cos(-endAngle * rad),
+        y1 = cy + r * Math.sin(-startAngle * rad),
+        y2 = cy + r * Math.sin(-endAngle * rad);
         return {
             path: ["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 1, x2, y2, "z"],
             fill: color
         };
     };
-
-    background = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 180]}).attr({"stroke-opacity": 0, fill: "#EEE"});
-    foreground = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 0]}).attr({"stroke-opacity": 0, "stroke-linejoin": "round"});
-    foreground.animate(Raphael.animation({segment: [pos_x, pos_y, radius, 0, value]}, ms_interval, easing).delay(ms_delay));
-    if (have_caption) {
+    
+    background = paper.path().attr({
+        segment: [pos_x, pos_y, radius, 0, 180]
+    }).attr({
+        "stroke-opacity": 0,
+        fill: "#EEE"
+    });
+    
+    // Create or update
+    if (gauge == null) {
+        
+    } else {
+        
+    }
+    
+    
+    if (opt.has_animation) {
+        // Initial State
+        foreground = paper.path().attr({
+            segment: [pos_x, pos_y, radius, 0, 0]
+        }).attr({
+            "stroke-opacity": 0,
+            "stroke-linejoin": "round"
+        });
+        // Final State
+        foreground.animate(Raphael.animation({
+            segment: [pos_x, pos_y, radius, 0, value]
+        }, ms_interval, easing).delay(ms_delay));
+    } else {
+        // Final State
+        foreground = paper.path().attr({
+            segment: [pos_x, pos_y, radius, 0, value]
+        }).attr({
+            "stroke-opacity": 0,
+            "stroke-linejoin": "round"
+        });
+    }
+    
+    if (has_caption) {
         var char_size = radius * 0.25;
-            if (char_size < 20) char_size = 20;
+        if (char_size < 20) char_size = 20;
         var font = char_size+ "px " + Aquarious.font_family,
-            color = "#CCC";
+        color = "#CCC";
+        
         caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
             fill: color,
             font: font,
             "text-anchor": "middle"
         });
     }
-
+    
     gauge = paper.set().push(background, foreground, caption);
-    return gauge;
+    widget.svg = gauge;
+    return widget;
 }
 
 
@@ -257,7 +492,7 @@ function createBar(paper, levels, value, total_width) {
     pointer_path,
     pointer,
     anim;
-
+    
     // Dibuja la barra con tantos rectángulos como levels
     for (i=0;i<levels;i++) {
         bar[i] = paper.rect(x, y, rect_width, rect_height, rect_corner_radius)
@@ -269,7 +504,7 @@ function createBar(paper, levels, value, total_width) {
         h+=h_inc;
     //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
     }
-
+    
     // Dibuja el puntero triangular y lo posiciona en value
     final_pos = value*gap;
     pointer_path = "M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z";
@@ -278,7 +513,7 @@ function createBar(paper, levels, value, total_width) {
         stroke: "none",
         transform: "T"+(-11+(rect_width/2))+"0,10S1.8"
     });
-
+    
     anim = Raphael.animation({
         transform: ["...T", final_pos, 0]
     }, 2500, "<>");
@@ -286,7 +521,7 @@ function createBar(paper, levels, value, total_width) {
     for (i=0;i<levels;i++) {
         bar[i].animateWith(pointer,anim,{})
     }
-
+    
     bar.pointer = pointer;
     paper.renderfix();
     return bar;
@@ -313,7 +548,7 @@ function createBar(paper, levels, value, total_width) {
  *            function_dot_width numberel grosor de los puntos de funcion
  *            popup_background String el color del fondo del popup en #rgbhex
  *            popup_opacity float la transparencia del fondo del popup
- *            ms_interval int numero de milisegundos entre cada nuevo trazo
+ *            interval int numero de milisegundos entre cada nuevo trazo
  *            delay int numero de milisegundos que tarda la animacion en comenzar
  *
  * @return graph el objeto con la gráfica y sus componentes internos
@@ -416,7 +651,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         }
     }
     values_x.sort();
-
+    
     /* Si la gráfica es de valores monetarios los márgenes máximos
      * estarán predefinidos para tener un look&feel consistente.
      */
@@ -439,7 +674,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         ceiling = (max_y == 0) ? 6:Math.ceil(max_y*1.2);
         while((typeof((ceiling/gaps_y))=='number') && ((ceiling/gaps_y).toString().indexOf('.')!=-1)) ceiling++;
     }
-
+    
     // Dibuja las líneas de referencia para el eje y
     x_margin = x_margin*(String(ceiling).length);
     x_graph = x_margin+12;
@@ -461,7 +696,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         });
     }
     horizontal_axis_lines = paper.setFinish();
-
+    
     // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__graph_width__|_
     graph_width -= graph_width*.10;
     // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores,
@@ -469,15 +704,15 @@ function create2AxisGraph (paper, width, height, values, options) {
     gaps_x = Math.floor(graph_width / (values_x[values_x.length-1].toString().length*10));
     if (gaps_x > values_x.length) gaps_x = values_x.length;
     gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
-
+    
     // Dibuja las líneas de referencia para el eje x además de las líneas del gráfico en función de las funciones y sus valores
     for (fun=0;fun<values.length;fun++) {
         dots[fun] = [];
         paths[fun] = [];
         over_areas[fun] = [];
-
+        
         x = x_graph + graph_width*.05 - graph_width/(values[fun].length-1);
-
+        
         for (i=0;i<values[fun].length;i++) {
             x += graph_width/(values[fun].length-1);
             //x = x_graph + graph_width/values[fun].length*i + x_margin;
@@ -507,7 +742,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     path:path_string[i-1]
                 }, ms_interval-300, "<>").delay(ms_delay-200));
             }
-
+            
             x_aux[i] = x;
             y_aux[i] = y_value;
             // Dibuja las lineas multiples en caso de que varios valores tengan los mismos valores entre dos puntos
@@ -552,7 +787,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     perpendicular1_end = paper.simpleLine(x_aux[i],y_aux[i],path_aux_size,angle+90);
                     perpendicular2_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+270);
                     perpendicular2_end = paper.simpleLine(x_aux[i],y_aux[i],path_aux_size,angle+270);
-
+                    
                     // Una vez obtenidas trazamos las lineas paralelas con el color correspondiente a cada funcion
                     gap = path_aux_size/number_lines;
                     inc = gap;
@@ -687,7 +922,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     lx = label[0].transform()[0][1] + ppp.dx;
                     ly = label[0].transform()[0][2] + ppp.dy;
                     frame.show().stop().animate(anim);
-
+                    
                     for (i=0;i<label.length;i++) {
                         label[i].show().stop().animateWith(frame, anim, {
                             transform: ["t", lx, ly]
@@ -713,7 +948,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                 });
             })(x, y_value, i, fun);
         }
-
+        
         // Dibuja el relleno del path de la funcion al eje
         if (!(options != null && options.no_fill != null && options.no_fill == true)) {
             fill = paper.path(path_string_fill+" "+x+" "+y+"z").attr({
@@ -732,7 +967,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         }
         paper.renderfix();
     }
-
+    
     //if (fun == values.length-1) {
     //   // Si se solapan lineas o puntos se hace
     //   for (fun=0;fun<values.length-1;fun++) {
@@ -748,7 +983,7 @@ function create2AxisGraph (paper, width, height, values, options) {
     //       }
     //   }
     //}
-
+    
     // Traemos el popup al frente
     frame.toFront();
     label.toFront();
@@ -758,7 +993,7 @@ function create2AxisGraph (paper, width, height, values, options) {
             over_areas[fun][i].toFront();
         }
     }
-
+    
     graph.horizontal_axis_lines = horizontal_axis_lines;
     graph.paths = paths;
     graph.fill = fill;
@@ -816,6 +1051,7 @@ function createSpider(paper, labels, values, max_value, options) {
         "text-anchor": "start"
     },
     text_align = "middle";
+    
     for (i=0;i<max_value;i++) {
         // Raphael:: dibuja tantos polígonos como niveles, cada uno con un radio mayor
         polygon_radius+=interval;
@@ -827,7 +1063,7 @@ function createSpider(paper, labels, values, max_value, options) {
         paper.text(origin_x+3,origin_y-polygon_radius+(interval/2)+5,i).attr(txt_levels);
     }
     paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
-
+    
     // Sacamos las coordenadas de un polígno mayor para dibujar las etiquetas y las líneas de nivel
     line_origin_coord = paper.polygon(origin_x, origin_y, polygon_radius, levels).hide().getCornersArray();
     for (i=0;i<levels;i++) {
@@ -841,19 +1077,19 @@ function createSpider(paper, labels, values, max_value, options) {
         if (i==0 || i==levels/2) text_align = "middle";
         else if (i>levels/2) text_align = "end"
         else text_align = "start";
-
+        
         labels_graph[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
         .attr(Aquarious.txt2).attr({
             "text-anchor": text_align
         });
     }
-
-
+    
+    
     // crea el atributo levels y max_value dentro del objeto spider
     spider.levels = polygons;
     spider.max_value = max_value;
-
-
+    
+    
     // Dibuja el gráfico de la función
     var j, coord_x, coord_y,
     level,
@@ -919,7 +1155,7 @@ function createSpider(paper, labels, values, max_value, options) {
         default:
             in_text = " in";
     }
-
+    
     for (fun=0;fun<values.length;fun++){
         shape_points_array[fun] = [];
         for (i=0;i<values[fun].length;i++) {
@@ -936,7 +1172,7 @@ function createSpider(paper, labels, values, max_value, options) {
             });
         }
     }
-
+    
     for (fun=0;fun<shape_points_array.length;fun++){
         shape_points = "M";
         dots[fun] = [];
@@ -945,7 +1181,7 @@ function createSpider(paper, labels, values, max_value, options) {
             coord_x = shape_points_array[fun][i].x;
             coord_y = shape_points_array[fun][i].y;
             shape_points+=coord_x+","+coord_y+" L";
-
+            
             x_aux[i] = coord_x;
             y_aux[i] = coord_y;
             // Raphael:: dibuja un circulo por cada coordenada para simbolizar "el punto gordo"
@@ -960,7 +1196,7 @@ function createSpider(paper, labels, values, max_value, options) {
                 cy: coord_y,
                 r: function_dot_width
             }, ms_interval, '<>').delay(ms_delay+=200));
-
+            
             // Dibuja un rectangulo transparente para gestionar los eventos over
             //over_rect_width = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
             over_rect_width = 32;
@@ -1026,7 +1262,7 @@ function createSpider(paper, labels, values, max_value, options) {
                     lx = label[0].transform()[0][1] + ppp.dx;
                     ly = label[0].transform()[0][2] + ppp.dy;
                     frame.show().stop().animate(anim);
-
+                    
                     for (i=0;i<label.length;i++) {
                         label[i].show().stop().animateWith(frame, anim, {
                             transform: ["t", lx, ly]
@@ -1066,7 +1302,7 @@ function createSpider(paper, labels, values, max_value, options) {
         .animate(Raphael.animation({
             opacity: 1
         }, ms_interval+400, "<>").delay(ms_delay+=1300));
-
+        
         if (multifun) {
             for (i=1;i<=shape_points_array[fun].length;i++) {
                 // Dibuja las lineas multiples en caso de que varios valores tengan los mismos valores entre dos puntos
@@ -1105,7 +1341,7 @@ function createSpider(paper, labels, values, max_value, options) {
                     perpendicular1_end = paper.simpleLine(x_aux[j],y_aux[j],path_aux_size,angle+90);
                     perpendicular2_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+270);
                     perpendicular2_end = paper.simpleLine(x_aux[j],y_aux[j],path_aux_size,angle+270);
-
+                    
                     // Una vez obtenidas trazamos las lineas paralelas con el color correspondiente a cada funcion
                     gap = path_aux_size/number_lines;
                     inc = gap;
@@ -1155,17 +1391,17 @@ function createSpider(paper, labels, values, max_value, options) {
                 // si es impar tan solo cambiamos el grosor de la linea que corresponde para superponerla con las pares
                 if (number_lines > 1 && number_lines%2 == 1) {
                     path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", shape_points_array[fun][i-1].x, shape_points_array[fun][i-1].y, shape_points_array[fun][j].x, shape_points_array[fun][j].y);
-
+                
                 }
             }
         }
-
+        
         //        parallel_set.toFront();
         for (i=0;i<dots[fun].length;i++) {
             dots[fun][i].toFront();
         }
     }
-
+    
     // Traemos el popup al frente
     frame.toFront();
     label.toFront();
@@ -1175,7 +1411,7 @@ function createSpider(paper, labels, values, max_value, options) {
             over_areas[fun][i].toFront();
         }
     }
-
+    
     for (i=0;i<spider.levels.length;i++) {
         spider.levels[i].mouseover(function() {
             this.animate({
@@ -1188,10 +1424,10 @@ function createSpider(paper, labels, values, max_value, options) {
             },200, '<');
         });
         for (j=0;j<values.length;j++) {
-
+            
         }
     }
-
+    
     spider.dots = dots;
     spider.function_shape = shape;
     paper.renderfix();
