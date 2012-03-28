@@ -39,10 +39,10 @@
                 
                 //gauge1 = createGauge(gauge_paper1,1000,400,666,{color: "#aaa"});
                 //createGauge(gauge_paper1,600,300,0.55,{color: "#EE6831"});
-                createGauge(gauge_paper1,600,300,0.55,{label: "complete"});
-                createGauge(gauge_paper2,400,200,0.85);
-                createGauge(gauge_paper3,200,200,0.1);
-                
+                createGauge(gauge_paper1,600,300,0.55,{label: "complete", delay: 2000});
+                createGauge(gauge_paper2,400,200,0.84,{'color': '#EE6831'});
+                createGauge(gauge_paper3,200,200,0.15);
+                // {'color': '#EE6831'}
 
                 bar = createBar(bar_paper, 32, 5, 900);
                 impagos_anuales_paper = Raphael("holder_impagos_anuales", 900, 330);

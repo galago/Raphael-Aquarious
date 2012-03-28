@@ -144,8 +144,9 @@ function createCounter(paper, width, height, value, options) {
         value_length = String(value).length,
         fixed_size = (options != null && options.char_size != null),
         char_size = fixed_size ? options.char_size : Math.round(width*2/value_length),
-        font = char_size + "px " + Aquarious.font_family,
-        counter = paper.text(width/2, height/2, formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false)).attr({
+        font = char_size + "px " + Aquarious.font_family;
+        if (!(options != null && options.not_format != null && options.not_format)) value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
+    var counter = paper.text(width/2, height/2, value).attr({
             fill: color,
             font: font,
             "font-weight": "bold",
@@ -185,9 +186,9 @@ function createGauge(paper, width, height, value, options) {
         easing = options != null && options.easing != null
               ? options.easing : "<>",
         ms_delay = options != null && options.delay != null
-                 ? options.delay : 0,
+                 ? options.delay : 3000,
         ms_interval = options != null && options.interval != null
-                    ? options.interval : 3000,
+                    ? options.interval : 1000,
         label = options != null && options.label != null
                     ? options.label : "";
     // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
@@ -207,6 +208,11 @@ function createGauge(paper, width, height, value, options) {
             fill: color
         };
     };
+    
+    
+    paper.customAttributes.value = function (val) {
+        return {text: Math.round(val) + "% " + label};
+    };
 
     background = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 180]}).attr({"stroke-opacity": 0, fill: "#EEE"});
     foreground = paper.path().attr({segment: [pos_x, pos_y, radius, 0, 0]}).attr({"stroke-opacity": 0, "stroke-linejoin": "round"});
@@ -219,8 +225,10 @@ function createGauge(paper, width, height, value, options) {
         caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
             fill: color,
             font: font,
-            "text-anchor": "middle"
+            "text-anchor": "middle",
+            value: 0
         });
+        caption.animate(Raphael.animation({value: percent_value}, ms_interval, easing).delay(ms_delay));
     }
 
     gauge = paper.set().push(background, foreground, caption);
@@ -291,6 +299,30 @@ function createBar(paper, levels, value, total_width) {
     paper.renderfix();
     return bar;
 }
+
+
+function createBarChart (paper, width, height, chart_type, values, options) {
+    var graph_width,
+        graph_height,
+        bar_x, 
+        bar_y,
+        bar_width,
+        bar_height,
+        bar_thickness = "variable segun el numero de valores";
+        
+        if (chart_type == 'V') {
+            bar_width = bar_thickness;
+            bar_height = 0;
+        }
+        else if (chart_type == 'H') {
+            bar_width = 0;
+            bar_height = bar_thickness;
+        } else return;
+        
+        // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+        
+}
+
 
 
 /**
