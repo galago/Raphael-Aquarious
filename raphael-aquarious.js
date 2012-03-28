@@ -146,6 +146,21 @@ function Popup() {
 }
 
 
+function AnimationAbstraction(options) {
+    this.has_animation = options.has_animation;
+    this.interval = options.interval;
+    this.delay = options.delay;
+    this.easing = options.easing;
+    
+    this.handle = function(elem, attributes, callback) {
+        if (this.has_animation) {
+            elem.animate(Raphael.animation(attributes, this.interval, this.easing, callback).delay(this.delay));
+        } else {
+            elem.attr(attributes);
+        }
+    }
+}
+
 function Options(options) {
     this.type;
     this.id_holder;
@@ -360,15 +375,17 @@ function drawCounter(widget) {
  *  options.label
  **/
 function createGauge(widget) {
+
     var gauge = widget.svg,
     paper = widget.paper,
     opt = widget.options,
     width = opt.width,
     height = opt.height,
-    value = opt.value,
+    value = opt.value;
+    if (opt.interval==0) opt.interval = 3000;
     
-    background, foreground, caption,
-    foreground_initial_state_options, foreground_final_state_options,
+    var animator = new AnimationAbstraction(opt),
+    background, foreground, caption,    
     initial_value, initial_percent_value,
     has_caption = opt.has_caption,
     percent_value = Math.round(value * 100),
@@ -380,11 +397,7 @@ function createGauge(widget) {
     pos_y = radius + padding,
     //        stroke_width = opt != null && opt.stroke_width != null
     //              ? opt.stroke_width : radius/30,
-    
-    // Animation
-    easing = opt.easing,
-    ms_delay = opt.delay,
-    ms_interval = opt.interval!=0 ? opt.interval: 3000,
+        
     label = opt.label;
     // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
     value = value >= 0 && value <= 1 ? value*180 : 180;
@@ -447,27 +460,10 @@ function createGauge(widget) {
         background = gauge.pop();     
     }    
     
-    // Animation Final State
-    if (opt.has_animation) {
-        foreground.animate(Raphael.animation({
-            segment: [pos_x, pos_y, radius, 0, value]
-        }, ms_interval, easing).delay(ms_delay));
-        if (has_caption) {
-            caption.animate(Raphael.animation({
-                value: percent_value
-            }, ms_interval, easing).delay(ms_delay)); 
-        }
-    } else {
-        foreground.attr({
-            segment: [pos_x, pos_y, radius, 0, value]
-        });
-        if (has_caption) {
-            caption.attr({
-                value: percent_value
-            });
-        }
-    }
-    
+    // Final State
+    animator.handle(foreground, { segment: [pos_x, pos_y, radius, 0, value] });
+    if (has_caption) { animator.handle(caption, { value: percent_value }); };
+        
     gauge = paper.set().push(background, foreground)
     if (has_caption) gauge.push(caption);
     widget.svg = gauge;
