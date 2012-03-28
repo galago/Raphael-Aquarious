@@ -138,13 +138,6 @@ Raphael.fn.simpleLine = function (cx, cy, length, angle) {
 
 
 
-
-
-
-
-
-
-
 /* Popup object defaults */
 function Popup() {
     this.background_color;
@@ -357,6 +350,7 @@ function drawCounter(widget) {
 }
 
 
+
 /**
  *  options.color
  *  options.no_caption
@@ -407,6 +401,11 @@ function createGauge(widget) {
         };
     };
     
+    paper.customAttributes.value = function (val) {
+        return {text: Math.round(val) + "% " + label};
+    };
+
+
     background = paper.path().attr({
         segment: [pos_x, pos_y, radius, 0, 180]
     }).attr({
@@ -454,8 +453,10 @@ function createGauge(widget) {
         caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
             fill: color,
             font: font,
-            "text-anchor": "middle"
+            "text-anchor": "middle",
+            value: 0
         });
+        caption.animate(Raphael.animation({value: percent_value}, ms_interval, easing).delay(ms_delay));
     }
     
     gauge = paper.set().push(background, foreground, caption);
@@ -527,6 +528,30 @@ function createBar(paper, levels, value, total_width) {
     paper.renderfix();
     return bar;
 }
+
+
+function createBarChart (paper, width, height, chart_type, values, options) {
+    var graph_width,
+        graph_height,
+        bar_x, 
+        bar_y,
+        bar_width,
+        bar_height,
+        bar_thickness = "variable segun el numero de valores";
+        
+        if (chart_type == 'V') {
+            bar_width = bar_thickness;
+            bar_height = 0;
+        }
+        else if (chart_type == 'H') {
+            bar_width = 0;
+            bar_height = bar_thickness;
+        } else return;
+        
+        // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+        
+}
+
 
 
 /**
