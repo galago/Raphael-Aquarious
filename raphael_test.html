@@ -16,9 +16,11 @@
                 r_height_spider = 550;
 
                 asyncEvent = function() {
-                    gauge1.updateValue(document.getElementById("inputValue").value);
-                    gauge2.updateValue(document.getElementById("inputValue").value);
-                    gauge3.updateValue(document.getElementById("inputValue").value);
+                    var input_value = document.getElementById("inputValue").value/100;
+                    gauge1.updateValue(input_value);
+                    gauge2.updateValue(input_value);
+                    gauge3.updateValue(input_value);
+                    counter3.updateValue(input_value);
                 }
 
                 bar_paper = Raphael("holder1", r_width, 150),
@@ -47,8 +49,12 @@
                     width: 400,
                     height: 300,
                     value: 1234,
-                    char_size: 50
-                });
+                    char_size: 50,
+                    interval: 1000,
+                    delay:2000
+                    
+                }).updateValue(20);
+                
                 counter3 = new Widget({
                     type: "counter",
                     id_holder: "holder_counter3",
@@ -65,7 +71,7 @@
                     width: 600,
                     height: 300,
                     value: 0.55,
-                    label: "complete",
+                    label: "(no animation)",
                     has_animation: false
                 });
                 gauge2 = new Widget({

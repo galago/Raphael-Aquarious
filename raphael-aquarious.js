@@ -272,7 +272,7 @@ function Widget(options) {
                 return drawCounter(this);
                 break;
             case "gauge":
-                return createGauge(this);
+                return drawGauge(this);
                 break;
         }
     }
@@ -337,7 +337,7 @@ function drawCounter(widget) {
                     text: output_value
                 }).animate(Raphael.animation({
                     opacity: 1
-                }, duration, opt.easing).delay(opt.delay));    
+                }, duration, opt.easing));    
             }).delay(opt.delay));  
         
         
@@ -374,7 +374,7 @@ function drawCounter(widget) {
  *  options.interval
  *  options.label
  **/
-function createGauge(widget) {
+function drawGauge(widget) {
 
     var gauge = widget.svg,
     paper = widget.paper,
