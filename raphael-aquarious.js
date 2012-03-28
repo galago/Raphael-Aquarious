@@ -450,6 +450,7 @@ function createGauge(widget) {
         var font = char_size+ "px " + Aquarious.font_family,
         color = "#CCC";
         
+        
         caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
             fill: color,
             font: font,
