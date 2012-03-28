@@ -368,14 +368,16 @@ function createGauge(widget) {
     value = opt.value,
     
     background, foreground, caption,
+    foreground_initial_state_options, foreground_final_state_options,
+    initial_value, initial_percent_value,
     has_caption = opt.has_caption,
+    percent_value = Math.round(value * 100),
     // Si hay caption dejamos un 25% de la altura para pintarlo
     gauge_height = has_caption ? height * 0.85 : height,
     padding = 20,
     radius = Math.min(width/2,gauge_height) - padding*2,
     pos_x = width/2,
     pos_y = radius + padding,
-    percent_value = Math.round(value * 100),
     //        stroke_width = opt != null && opt.stroke_width != null
     //              ? opt.stroke_width : radius/30,
     
@@ -402,64 +404,72 @@ function createGauge(widget) {
     };
     
     paper.customAttributes.value = function (val) {
-        return {text: Math.round(val) + "% " + label};
+        return {
+            text: Math.round(val) + "% " + label
+        };
     };
 
-
-    background = paper.path().attr({
-        segment: [pos_x, pos_y, radius, 0, 180]
-    }).attr({
-        "stroke-opacity": 0,
-        fill: "#EEE"
-    });
-    
-    // Create or update
+    initial_value = opt.has_animation ? 0 : value;
+    initial_percent_value = Math.round(initial_value * 100);
+    // Create or pop the gauge items
     if (gauge == null) {
-        
-    } else {
-        
-    }
-    
-    
-    if (opt.has_animation) {
         // Initial State
-        foreground = paper.path().attr({
-            segment: [pos_x, pos_y, radius, 0, 0]
+        // Background
+        background = paper.path().attr({
+            segment: [pos_x, pos_y, radius, 0, 180]
         }).attr({
             "stroke-opacity": 0,
-            "stroke-linejoin": "round"
-        });
-        // Final State
+            fill: "#EEE"
+        });          
+        // Foreground
+        foreground = paper.path().attr({
+            "stroke-opacity": 0, 
+            "stroke-linejoin": "round",
+            segment: [pos_x, pos_y, radius, 0, initial_value]
+        });        
+        // Caption
+        if (has_caption) {
+            var char_size = radius * 0.25;
+            if (char_size < 20) char_size = 20;
+            var font = char_size+ "px " + Aquarious.font_family,
+            color = "#CCC";
+        
+            caption = paper.text(pos_x, pos_y + char_size/1.5, initial_percent_value + "% " + label).attr({
+                fill: color,
+                font: font,
+                "text-anchor": "middle",
+                value: initial_value
+            });     
+        }
+    } else {
+        if (has_caption) caption = gauge.pop();
+        foreground = gauge.pop();
+        background = gauge.pop();     
+    }    
+    
+    // Animation Final State
+    if (opt.has_animation) {
         foreground.animate(Raphael.animation({
             segment: [pos_x, pos_y, radius, 0, value]
         }, ms_interval, easing).delay(ms_delay));
+        if (has_caption) {
+            caption.animate(Raphael.animation({
+                value: percent_value
+            }, ms_interval, easing).delay(ms_delay)); 
+        }
     } else {
-        // Final State
-        foreground = paper.path().attr({
+        foreground.attr({
             segment: [pos_x, pos_y, radius, 0, value]
-        }).attr({
-            "stroke-opacity": 0,
-            "stroke-linejoin": "round"
         });
+        if (has_caption) {
+            caption.attr({
+                value: percent_value
+            });
+        }
     }
     
-    if (has_caption) {
-        var char_size = radius * 0.25;
-        if (char_size < 20) char_size = 20;
-        var font = char_size+ "px " + Aquarious.font_family,
-        color = "#CCC";
-        
-        
-        caption = paper.text(pos_x, pos_y + char_size/1.5, percent_value + "% " + label).attr({
-            fill: color,
-            font: font,
-            "text-anchor": "middle",
-            value: 0
-        });
-        caption.animate(Raphael.animation({value: percent_value}, ms_interval, easing).delay(ms_delay));
-    }
-    
-    gauge = paper.set().push(background, foreground, caption);
+    gauge = paper.set().push(background, foreground)
+    if (has_caption) gauge.push(caption);
     widget.svg = gauge;
     return widget;
 }
@@ -532,23 +542,23 @@ function createBar(paper, levels, value, total_width) {
 
 function createBarChart (paper, width, height, chart_type, values, options) {
     var graph_width,
-        graph_height,
-        bar_x, 
-        bar_y,
-        bar_width,
-        bar_height,
-        bar_thickness = "variable segun el numero de valores";
+    graph_height,
+    bar_x, 
+    bar_y,
+    bar_width,
+    bar_height,
+    bar_thickness = "variable segun el numero de valores";
         
-        if (chart_type == 'V') {
-            bar_width = bar_thickness;
-            bar_height = 0;
-        }
-        else if (chart_type == 'H') {
-            bar_width = 0;
-            bar_height = bar_thickness;
-        } else return;
+    if (chart_type == 'V') {
+        bar_width = bar_thickness;
+        bar_height = 0;
+    }
+    else if (chart_type == 'H') {
+        bar_width = 0;
+        bar_height = bar_thickness;
+    } else return;
         
-        // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+// Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
         
 }
 
@@ -1451,7 +1461,7 @@ function createSpider(paper, labels, values, max_value, options) {
         });
         for (j=0;j<values.length;j++) {
             
-        }
+            }
     }
     
     spider.dots = dots;

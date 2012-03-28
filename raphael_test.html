@@ -14,11 +14,13 @@
                 r_width = 1000;
                 r_height = 300;
                 r_height_spider = 550;
-                                
-               asyncEvent = function() {                   
-                   gauge1.updateValue(document.getElementById("inputValue").value);
-               }
-               
+
+                asyncEvent = function() {
+                    gauge1.updateValue(document.getElementById("inputValue").value);
+                    gauge2.updateValue(document.getElementById("inputValue").value);
+                    gauge3.updateValue(document.getElementById("inputValue").value);
+                }
+
                 bar_paper = Raphael("holder1", r_width, 150),
                 graph_paper = Raphael("holder2", r_width, r_height),
                 graph_paper22 = Raphael("holder22", r_width, r_height),
@@ -30,7 +32,7 @@
                 spider_paper6 = Raphael("holder6", r_width, r_height_spider),
                 spider_paper7 = Raphael("holder7", r_width, r_height_spider),
 
-                
+
                 // Counters
                 counter1 = new Widget({
                     type: "counter",
@@ -53,9 +55,9 @@
                     width: 600,
                     height: 300,
                     value: 666
-                });      
-                
-                
+                });
+
+
                 // Gauges
                 gauge1 = new Widget({
                     type: "gauge",
@@ -63,24 +65,26 @@
                     width: 600,
                     height: 300,
                     value: 0.55,
-                    label: "complete"
-                });                   
+                    label: "complete",
+                    has_animation: false
+                });
                 gauge2 = new Widget({
                     type: "gauge",
                     id_holder: "holder_gauge2",
                     width: 400,
                     height: 200,
                     value: 0.85,
-                    has_animation: false
-                });                   
+                    has_animation: true
+                });
                 gauge3 = new Widget({
                     type: "gauge",
                     id_holder: "holder_gauge3",
                     width: 200,
                     height: 200,
-                    value: 0.1                    
+                    value: 0.1,
+                    has_caption: false
                 });
-                
+
 
                 bar = createBar(bar_paper, 32, 5, 900);
                 impagos_anuales_paper = Raphael("holder_impagos_anuales", 900, 330);
@@ -188,7 +192,7 @@
                 createSpider(spider_paper4,spider_labels,spider_values,6,{
                     value_text: "cacharro",
                     function_line_width: 9,
-                    function_dot_width: 7,                                                               
+                    function_dot_width: 7,
                     function_line_colors:["#FDD12A","#F00402"],
                     no_fill: true
                 });
