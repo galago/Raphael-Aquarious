@@ -11,9 +11,6 @@
         <script type="text/javascript" charset="utf-8">
             window.onload = function () {
 
-                r_width = 1000;
-                r_height = 300;
-                r_height_spider = 550;
 
                 asyncEvent = function() {
                     var input_value = document.getElementById("inputValue").value/100;
@@ -23,16 +20,15 @@
                     counter3.updateValue(input_value);
                 }
 
+
+                r_width = 1000;
+                r_height = 300;
+                r_height_spider = 550;
                 bar_paper = Raphael("holder1", r_width, 150),
                 graph_paper = Raphael("holder2", r_width, r_height),
                 graph_paper22 = Raphael("holder22", r_width, r_height),
                 graph_paper23 = Raphael("holder23", r_width, r_height),
                 graph_paper43 = Raphael("holder43", r_width, r_height),
-                spider_paper = Raphael("holder3", r_width, r_height_spider),
-                spider_paper4 = Raphael("holder4", r_width, r_height_spider),
-                spider_paper5 = Raphael("holder5", r_width, r_height_spider),
-                spider_paper6 = Raphael("holder6", r_width, r_height_spider),
-                spider_paper7 = Raphael("holder7", r_width, r_height_spider),
 
 
                 // Counters
@@ -183,11 +179,20 @@
                 //spider_values = [0,0,0,0,0,0,0,0];
 
                 //spider_values = [1,0,1,0,1,0,1,5];
-                spider = createSpider(spider_paper,spider_labels,spider_values,5,{
+                spider = new Widget({
+                    type: "spider",
+                    id_holder: "holder3",
+                    width: 550,
+                    height: 300,
+                    labels: spider_labels,
+                    values: spider_values,
+                    max_value: 5,
                     value_text: "impago",
                     function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
                     no_fill: true
                 });
+                
+                
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
@@ -196,19 +201,37 @@
                     "Otros"];
                 spider_values = [[9,5,3,4,8],
                     [6,5,5,4,8]];
-                createSpider(spider_paper4,spider_labels,spider_values,6,{
+                spider = new Widget({
+                    type: "spider",
+                    id_holder: "holder4",
+                    width: 1000,
+                    height: 300,
+                    labels: spider_labels,
+                    values: spider_values,
+                    max_value: 6,
                     value_text: "cacharro",
                     function_line_width: 9,
                     function_dot_width: 7,
                     function_line_colors:["#FDD12A","#F00402"],
                     no_fill: true
-                });
+                });                
+
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
                     "Financiación\nPersonal"];
                 spider_values = [2,8,2];
-                createSpider(spider_paper5,spider_labels,spider_values,3,{value_text: "novia"});
+                spider = new Widget({
+                    type: "spider",
+                    id_holder: "holder5",
+                    width: 550,
+                    height: 1300,
+                    labels: spider_labels,
+                    values: spider_values,
+                    max_value: 8,
+                    value_text: "novia"
+                });                  
+                
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
@@ -223,20 +246,38 @@
                     "Tarjetas"];
                 spider_values = [[2,3,5,6,9,82,1,15,8,9,8],
                     [2,3,5,6,9,82,1,15,8,9,8]];
-                createSpider(spider_paper6,spider_labels,spider_values,6,{value_text: "impago",function_line_width: 9,
+                spider = new Widget({
+                    type: "spider",
+                    id_holder: "holder6",
+                    width: 900,
+                    height: 800,
+                    labels: spider_labels,
+                    values: spider_values,
+                    max_value: 6,
+                    value_text: "impago",
+                    function_line_width: 9,                    
                     function_line_colors:["#91FF22","#2190FF","#FF2190"],
                     no_fill: true
-                });
+                });  
+
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
                     "Financiación\nPersonal",
                     "Hipotecas"];
                 spider_values = [4,3,5,6];
-                createSpider(spider_paper7,spider_labels,spider_values,6,{
+                spider = new Widget({
+                    type: "spider",
+                    id_holder: "holder7",
+                    width: 550,
+                    height: 300,
+                    labels: spider_labels,
+                    values: spider_values,
+                    max_value: 6,
                     value_text: "impago",
-                    function_dot_width: 0
-                });
+                    function_dot_width: 0 
+                });                 
+
 
             };
         </script>
@@ -245,10 +286,6 @@
         <div id="holder_counter1"></div>
         <div id="holder_counter2"></div>
         <div id="holder_counter3"></div>
-        <div style="position: fixed; top: 100px; right: 200px;">
-            <input id="inputValue" type="text" value="typeNewValue">
-            <button onmouseup="asyncEvent()">try!</button>
-        </div>
         <div id="holder_gauge1"></div>
         <div id="holder_gauge2"></div>
         <div id="holder_gauge3"></div>
@@ -264,5 +301,9 @@
         <div id="holder5"></div>
         <div id="holder6"></div>
         <div id="holder7"></div>
+        <div style="position: fixed; top: 100px; right: 200px;">
+            <input id="inputValue" type="text" value="typeNewValue">
+            <button onmouseup="asyncEvent()">try!</button>
+        </div>
     </body>
 </html>

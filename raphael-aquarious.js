@@ -151,7 +151,7 @@ function AnimationAbstraction(options) {
     this.interval = options.interval;
     this.delay = options.delay;
     this.easing = options.easing;
-    
+
     this.handle = function(elem, attributes, callback) {
         if (this.has_animation) {
             elem.animate(Raphael.animation(attributes, this.interval, this.easing, callback).delay(this.delay));
@@ -179,11 +179,11 @@ function Options(options) {
     // Popup
     this.popup_background_color;
     this.popup_background_opacity;
-    
+
     // Flags
     this.has_popup;
     this.has_animation;
-    
+
     this.toString = function() {
         var string = "Options\n";
         for (var i=0;i<this.length;i++) {
@@ -205,7 +205,7 @@ function Options(options) {
         " has_popup: " + this.has_popup + "\n" +
         " has_animation: " + this.has_animation + "\n" +
         " value: " + this.type;
-    
+
     }
     this.constructor = function() {
         /* Common Options */
@@ -215,7 +215,7 @@ function Options(options) {
             this.type = options.type;
             this.id_holder = options.id_holder;
         } else throw "RaphaelAquarious: missing options";
-        
+
         /* Optional with default values*/
         // Data
         this.value = options.value != null ? options.value : 0;
@@ -235,7 +235,7 @@ function Options(options) {
         // Flags
         this.has_popup = options.has_popup != null ? options.has_popup : true;
         this.has_animation = options.has_animation != null ? options.has_animation : true;
-        
+
         /* Individual Options */
         switch (this.type) {
             // Counter
@@ -246,16 +246,28 @@ function Options(options) {
                 this.has_caption = options.has_caption != null ? options.has_caption : true;
                 this.label = options.label != null ? options.label : "";
                 break;
+            case "spider":
+                if (options.labels != null && options.values != null && options.max_value != null ) {
+                    this.labels = options.labels;
+                    this.values = options.values;
+                    this.max_value = options.max_value;
+                } else throw "RaphaelAquarious[spider]: missing options";
+                this.value_text = options.value_text != null ? options.value_text : "";
+                this.no_fill = options.no_fill != null ? options.no_fill : false;
+                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
+                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
+                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                break;
             case "___template":
                 this._______ = options._______ != null ? options._______ : null;
                 break;
             default:
                 throw "RaphaelAquarious: unknown widget type";
-        }        
+        }
     }
-    
+
     /* Constructor */
-    this.constructor();   
+    this.constructor();
     return this;
 }
 
@@ -264,9 +276,9 @@ function Widget(options) {
     this.paper;
     this.popup;
     this.svg;
-    
+
     this.factory = function() {
-        
+
         switch (this.options.type) {
             case "counter":
                 return drawCounter(this);
@@ -274,24 +286,27 @@ function Widget(options) {
             case "gauge":
                 return drawGauge(this);
                 break;
+            case "spider":
+                return drawSpider(this);
+                break;
         }
     }
     this.updateValue = function(new_value) {
-        this.options.value = new_value;        
+        this.options.value = new_value;
         this.factory();
         return this;
-    }    
+    }
     this.update = function(options) {
-        if (options != null) this.options = new Options(options);    
+        if (options != null) this.options = new Options(options);
         this.svg = this.factory(this.options);
         return this;
-    }    
-    
+    }
+
     this.constructor = function () {
-        this.options = new Options(options);    
+        this.options = new Options(options);
         this.paper = Raphael(this.options.id_holder, this.options.width, this.options.height);
         this.popup = (this.options.has_popup) ? new Popup(this.options) : null;
-        this.factory(options);        
+        this.factory(options);
     }
     /* Constructor */
     this.constructor();
@@ -304,21 +319,21 @@ function Widget(options) {
  *  options.color
  *  options.char_size
  */
-function drawCounter(widget) { 
+function drawCounter(widget) {
     var counter = widget.svg,
     paper = widget.paper,
     opt = widget.options,
     width = opt.width,
     height = opt.height,
     value = opt.value,
-    
+
     color = opt.color != null ? opt.color : Aquarious.color,
     value_length = String(value).length,
     fixed_size = opt.char_size != null,
     char_size = fixed_size ? opt.char_size : Math.round(width*2/value_length),
     font = char_size + "px " + Aquarious.font_family,
     output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
-    
+
     // Create or update
     if (counter == null) {
         counter = paper.text(width/2, height/2, output_value).attr({
@@ -327,7 +342,7 @@ function drawCounter(widget) {
             "font-weight": "bold",
             "text-anchor": "middle"
         });
-    } else { 
+    } else {
         if (opt.has_animation) {
             var duration = opt.interval > 0 ? opt.interval : 300;
             counter.animate(Raphael.animation({
@@ -337,17 +352,17 @@ function drawCounter(widget) {
                     text: output_value
                 }).animate(Raphael.animation({
                     opacity: 1
-                }, duration, opt.easing));    
-            }).delay(opt.delay));  
-        
-        
+                }, duration, opt.easing));
+            }).delay(opt.delay));
+
+
         } else {
             counter.attr({
                 text: output_value
             });
         }
     }
-    
+
     // Reescalamos si la fuente es demasiado grande para la caja hasta que quepa en ella sin clipping
     // Da problemas de rendimiento"font-weight": 5,
     if (!fixed_size) {
@@ -359,8 +374,8 @@ function drawCounter(widget) {
             char_size-=5;
         } while (counter.getBBox().width > width || counter.getBBox().height > height);
     }
-    
-    widget.svg = counter;   
+
+    widget.svg = counter;
     return widget;
 }
 
@@ -383,9 +398,9 @@ function drawGauge(widget) {
     height = opt.height,
     value = opt.value;
     if (opt.interval==0) opt.interval = 3000;
-    
+
     var animator = new AnimationAbstraction(opt),
-    background, foreground, caption,    
+    background, foreground, caption,
     initial_value, initial_percent_value,
     has_caption = opt.has_caption,
     percent_value = Math.round(value * 100),
@@ -397,12 +412,12 @@ function drawGauge(widget) {
     pos_y = radius + padding,
     //        stroke_width = opt != null && opt.stroke_width != null
     //              ? opt.stroke_width : radius/30,
-        
+
     label = opt.label;
     // Si el valor es valido entre 0 y 1. Lo convertimos a grados 0=0 grados 1=180
     value = value >= 0 && value <= 1 ? value*180 : 180;
-    
-    
+
+
     paper.customAttributes.segment = function (cx, cy, r, startAngle, endAngle) {
         var rad = Math.PI / 180,
         color = opt.color != null ? opt.color : "hsb(" + ((endAngle - startAngle) / 720) + ", 1, 1)",
@@ -415,7 +430,7 @@ function drawGauge(widget) {
             fill: color
         };
     };
-    
+
     paper.customAttributes.value = function (val) {
         return {
             text: Math.round(val) + "% " + label
@@ -433,37 +448,43 @@ function drawGauge(widget) {
         }).attr({
             "stroke-opacity": 0,
             fill: "#EEE"
-        });          
+        });
         // Foreground
         foreground = paper.path().attr({
-            "stroke-opacity": 0, 
+            "stroke-opacity": 0,
             "stroke-linejoin": "round",
             segment: [pos_x, pos_y, radius, 0, initial_value]
-        });        
+        });
         // Caption
         if (has_caption) {
             var char_size = radius * 0.25;
             if (char_size < 20) char_size = 20;
             var font = char_size+ "px " + Aquarious.font_family,
             color = "#CCC";
-        
+
             caption = paper.text(pos_x, pos_y + char_size/1.5, initial_percent_value + "% " + label).attr({
                 fill: color,
                 font: font,
                 "text-anchor": "middle",
                 value: initial_value
-            });     
+            });
         }
     } else {
         if (has_caption) caption = gauge.pop();
         foreground = gauge.pop();
-        background = gauge.pop();     
-    }    
-    
+        background = gauge.pop();
+    }
+
     // Final State
-    animator.handle(foreground, { segment: [pos_x, pos_y, radius, 0, value] });
-    if (has_caption) { animator.handle(caption, { value: percent_value }); };
-        
+    animator.handle(foreground, {
+        segment: [pos_x, pos_y, radius, 0, value]
+    });
+    if (has_caption) {
+        animator.handle(caption, {
+            value: percent_value
+        });
+    };
+
     gauge = paper.set().push(background, foreground)
     if (has_caption) gauge.push(caption);
     widget.svg = gauge;
@@ -500,7 +521,7 @@ function createBar(paper, levels, value, total_width) {
     pointer_path,
     pointer,
     anim;
-    
+
     // Dibuja la barra con tantos rectángulos como levels
     for (i=0;i<levels;i++) {
         bar[i] = paper.rect(x, y, rect_width, rect_height, rect_corner_radius)
@@ -512,7 +533,7 @@ function createBar(paper, levels, value, total_width) {
         h+=h_inc;
     //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
     }
-    
+
     // Dibuja el puntero triangular y lo posiciona en value
     final_pos = value*gap;
     pointer_path = "M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z";
@@ -521,7 +542,7 @@ function createBar(paper, levels, value, total_width) {
         stroke: "none",
         transform: "T"+(-11+(rect_width/2))+"0,10S1.8"
     });
-    
+
     anim = Raphael.animation({
         transform: ["...T", final_pos, 0]
     }, 2500, "<>");
@@ -529,7 +550,7 @@ function createBar(paper, levels, value, total_width) {
     for (i=0;i<levels;i++) {
         bar[i].animateWith(pointer,anim,{})
     }
-    
+
     bar.pointer = pointer;
     paper.renderfix();
     return bar;
@@ -539,12 +560,12 @@ function createBar(paper, levels, value, total_width) {
 function createBarChart (paper, width, height, chart_type, values, options) {
     var graph_width,
     graph_height,
-    bar_x, 
+    bar_x,
     bar_y,
     bar_width,
     bar_height,
     bar_thickness = "variable segun el numero de valores";
-        
+
     if (chart_type == 'V') {
         bar_width = bar_thickness;
         bar_height = 0;
@@ -553,9 +574,9 @@ function createBarChart (paper, width, height, chart_type, values, options) {
         bar_width = 0;
         bar_height = bar_thickness;
     } else return;
-        
+
 // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
-        
+
 }
 
 
@@ -683,7 +704,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         }
     }
     values_x.sort();
-    
+
     /* Si la gráfica es de valores monetarios los márgenes máximos
      * estarán predefinidos para tener un look&feel consistente.
      */
@@ -706,7 +727,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         ceiling = (max_y == 0) ? 6:Math.ceil(max_y*1.2);
         while((typeof((ceiling/gaps_y))=='number') && ((ceiling/gaps_y).toString().indexOf('.')!=-1)) ceiling++;
     }
-    
+
     // Dibuja las líneas de referencia para el eje y
     x_margin = x_margin*(String(ceiling).length);
     x_graph = x_margin+12;
@@ -728,7 +749,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         });
     }
     horizontal_axis_lines = paper.setFinish();
-    
+
     // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__graph_width__|_
     graph_width -= graph_width*.10;
     // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores,
@@ -736,15 +757,15 @@ function create2AxisGraph (paper, width, height, values, options) {
     gaps_x = Math.floor(graph_width / (values_x[values_x.length-1].toString().length*10));
     if (gaps_x > values_x.length) gaps_x = values_x.length;
     gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
-    
+
     // Dibuja las líneas de referencia para el eje x además de las líneas del gráfico en función de las funciones y sus valores
     for (fun=0;fun<values.length;fun++) {
         dots[fun] = [];
         paths[fun] = [];
         over_areas[fun] = [];
-        
+
         x = x_graph + graph_width*.05 - graph_width/(values[fun].length-1);
-        
+
         for (i=0;i<values[fun].length;i++) {
             x += graph_width/(values[fun].length-1);
             //x = x_graph + graph_width/values[fun].length*i + x_margin;
@@ -774,7 +795,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     path:path_string[i-1]
                 }, ms_interval-300, "<>").delay(ms_delay-200));
             }
-            
+
             x_aux[i] = x;
             y_aux[i] = y_value;
             // Dibuja las lineas multiples en caso de que varios valores tengan los mismos valores entre dos puntos
@@ -819,7 +840,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     perpendicular1_end = paper.simpleLine(x_aux[i],y_aux[i],path_aux_size,angle+90);
                     perpendicular2_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+270);
                     perpendicular2_end = paper.simpleLine(x_aux[i],y_aux[i],path_aux_size,angle+270);
-                    
+
                     // Una vez obtenidas trazamos las lineas paralelas con el color correspondiente a cada funcion
                     gap = path_aux_size/number_lines;
                     inc = gap;
@@ -954,7 +975,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                     lx = label[0].transform()[0][1] + ppp.dx;
                     ly = label[0].transform()[0][2] + ppp.dy;
                     frame.show().stop().animate(anim);
-                    
+
                     for (i=0;i<label.length;i++) {
                         label[i].show().stop().animateWith(frame, anim, {
                             transform: ["t", lx, ly]
@@ -980,7 +1001,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                 });
             })(x, y_value, i, fun);
         }
-        
+
         // Dibuja el relleno del path de la funcion al eje
         if (!(options != null && options.no_fill != null && options.no_fill == true)) {
             fill = paper.path(path_string_fill+" "+x+" "+y+"z").attr({
@@ -999,7 +1020,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         }
         paper.renderfix();
     }
-    
+
     //if (fun == values.length-1) {
     //   // Si se solapan lineas o puntos se hace
     //   for (fun=0;fun<values.length-1;fun++) {
@@ -1015,7 +1036,7 @@ function create2AxisGraph (paper, width, height, values, options) {
     //       }
     //   }
     //}
-    
+
     // Traemos el popup al frente
     frame.toFront();
     label.toFront();
@@ -1025,7 +1046,7 @@ function create2AxisGraph (paper, width, height, values, options) {
             over_areas[fun][i].toFront();
         }
     }
-    
+
     graph.horizontal_axis_lines = horizontal_axis_lines;
     graph.paths = paths;
     graph.fill = fill;
@@ -1056,25 +1077,33 @@ function create2AxisGraph (paper, width, height, values, options) {
  * @return spider an object with the spider and it's components
  * @author Al
  */
-function createSpider(paper, labels, values, max_value, options) {
+function drawSpider(widget) {
+    var spider = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    labels = opt.labels,
+    values = opt.values,
+    // TODO no especificarlo pero darle el valor maximo de las funciones
+    max_value = opt.max_value;
+    if (opt.interval==0) opt.interval = 3000;
+    
+
     var i,
     multifun = values[0] instanceof Array,
     fun = 0,
     fun_aux,
-    function_line_width = options != null && options.function_line_width != null
-    ? options.function_line_width : 4,
-    function_dot_width = options != null && options.function_dot_width != null
-    ? options.function_dot_width : 4,
+    function_line_width = opt.function_line_width,
+    function_dot_width = opt.function_dot_width,
     stroke_width = .8,
     stroke_color = "#BBB",
     levels = labels.length < 3 ? 3 : labels.length,
-    interval = options != null && options.growing_interval != null
-    ? options.growing_interval : 30,
-    origin_x = max_value*interval+150,
-    origin_y = max_value*interval+100,
+    interval,
+    origin_x = width/2,
+    origin_y = height/2,
     polygon_radius = 10,
     line_origin_coord,
-    spider = paper.set(),
     polygons = paper.set(),
     labels_graph = [],
     txt_levels = {
@@ -1083,7 +1112,10 @@ function createSpider(paper, labels, values, max_value, options) {
         "text-anchor": "start"
     },
     text_align = "middle";
-    
+
+    if (height > width) height = width;
+    interval = (height/2)/(max_value+2);
+    //console.log("width:"+width+" height:"+height+" interval:"+interval+" max_value:"+max_value+" max_value*interval:"+(max_value*interval));
     for (i=0;i<max_value;i++) {
         // Raphael:: dibuja tantos polígonos como niveles, cada uno con un radio mayor
         polygon_radius+=interval;
@@ -1095,7 +1127,7 @@ function createSpider(paper, labels, values, max_value, options) {
         paper.text(origin_x+3,origin_y-polygon_radius+(interval/2)+5,i).attr(txt_levels);
     }
     paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
-    
+
     // Sacamos las coordenadas de un polígno mayor para dibujar las etiquetas y las líneas de nivel
     line_origin_coord = paper.polygon(origin_x, origin_y, polygon_radius, levels).hide().getCornersArray();
     for (i=0;i<levels;i++) {
@@ -1109,19 +1141,18 @@ function createSpider(paper, labels, values, max_value, options) {
         if (i==0 || i==levels/2) text_align = "middle";
         else if (i>levels/2) text_align = "end"
         else text_align = "start";
-        
+
         labels_graph[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
         .attr(Aquarious.txt2).attr({
             "text-anchor": text_align
         });
     }
-    
-    
+
+
     // crea el atributo levels y max_value dentro del objeto spider
-    spider.levels = polygons;
-    spider.max_value = max_value;
-    
-    
+    spider = paper.set().push(polygons);
+
+
     // Dibuja el gráfico de la función
     var j, coord_x, coord_y,
     level,
@@ -1134,24 +1165,24 @@ function createSpider(paper, labels, values, max_value, options) {
     over_areas = [],
     over_rect_width = 40,
     parallel_set = paper.set(),
-    fill_opacity = options != null && options.no_fill != null && options.no_fill == true ? 0 : 0.2,
-    color = options != null && options.function_line_colors != null
-    ? options.function_line_colors : new Array(Aquarious.color),
-    ms_delay = options != null && options.delay != null
-    ? options.delay : 100,
-    ms_interval = options != null && options.interval != null
-    ? options.interval : 1500;
+    fill_opacity = opt.no_fill == true ? 0 : 0.2,
+    color = opt.function_line_colors != null
+    ? opt.function_line_colors : new Array(Aquarious.color),
+    ms_delay = opt.delay != null
+    ? opt.delay : 100,
+    ms_interval = opt.interval != null
+    ? opt.interval : 1500;
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
     if (!multifun) values = new Array(values);
     // popup var
     var in_text,
-    value_text = options != null && options.value_text != null
-    ? " "+options.value_text : "",
-    popup_background = options != null && options.popup_background != null
-    ? options.popup_background : "#000",
-    popup_opacity = options != null && options.popup_opacity != null
-    ? options.popup_opacity : .7,
+    value_text = opt.value_text != null
+    ? " "+opt.value_text : "",
+    popup_background = opt.popup_background != null
+    ? opt.popup_background : "#000",
+    popup_opacity = opt.popup_opacity != null
+    ? opt.popup_opacity : .7,
     leave_timer, is_label_visible = false,
     label = paper.set(),
     label_heights = [];
@@ -1187,16 +1218,16 @@ function createSpider(paper, labels, values, max_value, options) {
         default:
             in_text = " in";
     }
-    
+
     for (fun=0;fun<values.length;fun++){
         shape_points_array[fun] = [];
         for (i=0;i<values[fun].length;i++) {
             level = values[fun][i]-1;
             if (level>=0)  {
                 if (level >= max_value)
-                    shape_points_array[fun].push(spider.levels[max_value-1].getCornersArray()[i]);
+                    shape_points_array[fun].push(polygons[max_value-1].getCornersArray()[i]);
                 else
-                    shape_points_array[fun].push(spider.levels[level].getCornersArray()[i]);
+                    shape_points_array[fun].push(polygons[level].getCornersArray()[i]);
             }
             else shape_points_array[fun].push({
                 x:origin_x,
@@ -1204,7 +1235,7 @@ function createSpider(paper, labels, values, max_value, options) {
             });
         }
     }
-    
+
     for (fun=0;fun<shape_points_array.length;fun++){
         shape_points = "M";
         dots[fun] = [];
@@ -1213,7 +1244,7 @@ function createSpider(paper, labels, values, max_value, options) {
             coord_x = shape_points_array[fun][i].x;
             coord_y = shape_points_array[fun][i].y;
             shape_points+=coord_x+","+coord_y+" L";
-            
+
             x_aux[i] = coord_x;
             y_aux[i] = coord_y;
             // Raphael:: dibuja un circulo por cada coordenada para simbolizar "el punto gordo"
@@ -1228,7 +1259,7 @@ function createSpider(paper, labels, values, max_value, options) {
                 cy: coord_y,
                 r: function_dot_width
             }, ms_interval, '<>').delay(ms_delay+=200));
-            
+
             // Dibuja un rectangulo transparente para gestionar los eventos over
             //over_rect_width = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
             over_rect_width = 32;
@@ -1294,7 +1325,7 @@ function createSpider(paper, labels, values, max_value, options) {
                     lx = label[0].transform()[0][1] + ppp.dx;
                     ly = label[0].transform()[0][2] + ppp.dy;
                     frame.show().stop().animate(anim);
-                    
+
                     for (i=0;i<label.length;i++) {
                         label[i].show().stop().animateWith(frame, anim, {
                             transform: ["t", lx, ly]
@@ -1334,7 +1365,7 @@ function createSpider(paper, labels, values, max_value, options) {
         .animate(Raphael.animation({
             opacity: 1
         }, ms_interval+400, "<>").delay(ms_delay+=1300));
-        
+
         if (multifun) {
             for (i=1;i<=shape_points_array[fun].length;i++) {
                 // Dibuja las lineas multiples en caso de que varios valores tengan los mismos valores entre dos puntos
@@ -1373,7 +1404,7 @@ function createSpider(paper, labels, values, max_value, options) {
                     perpendicular1_end = paper.simpleLine(x_aux[j],y_aux[j],path_aux_size,angle+90);
                     perpendicular2_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+270);
                     perpendicular2_end = paper.simpleLine(x_aux[j],y_aux[j],path_aux_size,angle+270);
-                    
+
                     // Una vez obtenidas trazamos las lineas paralelas con el color correspondiente a cada funcion
                     gap = path_aux_size/number_lines;
                     inc = gap;
@@ -1423,17 +1454,17 @@ function createSpider(paper, labels, values, max_value, options) {
                 // si es impar tan solo cambiamos el grosor de la linea que corresponde para superponerla con las pares
                 if (number_lines > 1 && number_lines%2 == 1) {
                     path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", shape_points_array[fun][i-1].x, shape_points_array[fun][i-1].y, shape_points_array[fun][j].x, shape_points_array[fun][j].y);
-                
+
                 }
             }
         }
-        
+
         //        parallel_set.toFront();
         for (i=0;i<dots[fun].length;i++) {
             dots[fun][i].toFront();
         }
     }
-    
+
     // Traemos el popup al frente
     frame.toFront();
     label.toFront();
@@ -1443,23 +1474,23 @@ function createSpider(paper, labels, values, max_value, options) {
             over_areas[fun][i].toFront();
         }
     }
-    
-    for (i=0;i<spider.levels.length;i++) {
-        spider.levels[i].mouseover(function() {
+
+    for (i=0;i<polygons.length;i++) {
+        polygons[i].mouseover(function() {
             this.animate({
                 "stroke-width": 1.5
             },200, '<');
         });
-        spider.levels[i].mouseout(function() {
+        polygons[i].mouseout(function() {
             this.animate({
                 "stroke-width": .8
             },200, '<');
         });
         for (j=0;j<values.length;j++) {
-            
+
             }
     }
-    
+
     spider.dots = dots;
     spider.function_shape = shape;
     paper.renderfix();
