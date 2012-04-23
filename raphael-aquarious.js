@@ -148,16 +148,71 @@ function Popup() {
 
 function AnimationAbstraction(options) {
     this.has_animation = options.has_animation;
-    this.interval = options.interval;
+    this.event_duration = options.event_duration;
     this.delay = options.delay;
     this.easing = options.easing;
+    this.timeline_delay = this.delay;
+    this.total_duration = 0;
+    this.total_delay = 0;
+    this.current_event_duration = this.event_duration;
+    this.current_delay = this.delay;
+    this.current_easing = this.easing;
 
     this.handle = function(elem, attributes, callback) {
         if (this.has_animation) {
-            elem.animate(Raphael.animation(attributes, this.interval, this.easing, callback).delay(this.delay));
+            elem.animate(Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback).delay(this.current_delay));
+            this.total_duration += this.current_event_duration + this.current_delay;
+            this.total_delay += (this.current_delay - this.total_delay);
+            console.log("total_delay:"+this.total_delay+" current_delay:"+this.current_delay+" current_event_duration:"+this.current_event_duration);
+            this.resetCurrent();
         } else {
             elem.attr(attributes);
+        }        
+    }
+    
+    /**
+     * stacks the element animation with the current_delay to create a timeLine effect 
+     * */
+    this.pushToTimelineDelayed = function(elem, attributes, callback) {
+        this.nextDelay(this.total_delay + this.delay);
+        this.handle(elem, attributes, callback);        
+    }
+    
+    /**
+     * stacks the element animation with no delay to create a timeLine effect 
+     * */
+    this.pushToTimelineUndelayed= function(elem, attributes, callback) {
+        this.nextDelay(0);
+        this.handle(elem, attributes, callback);        
+    }
+    
+    /**
+     * animates the element stacking the current_delay to create a timeLine effect 
+     * */
+    this.pushToTimelineCustom = function(elem, options, attributes, callback) {        
+        if (options.delay != null) {
+            if (options.toTimeline) this.nextDelay(this.total_delay + options.delay);
+            else                    this.nextDelay(options.delay);
         }
+        if (options.event_duration != null) this.nextEventDuration(options.event_duration);
+        if (options.easing != null) this.nextEasing(options.easing);        
+        this.handle(elem, attributes, callback);        
+    }
+    
+    this.nextDelay = function(value) {
+        this.current_delay = value;
+    }
+    this.nextEventDuration = function(value) {
+        this.current_event_duration = value;
+    }
+    this.nextEasing = function(value) {
+        this.current_easing = value;
+    }
+    
+    this.resetCurrent = function() {
+        this.current_event_duration = this.event_duration;
+        this.current_delay = this.delay;
+        this.current_easing = this.easing;        
     }
 }
 
@@ -175,7 +230,7 @@ function Options(options) {
     // Animation
     this.easing;
     this.delay;
-    this.interval;
+    this.duration;
     // Popup
     this.popup_background_color;
     this.popup_background_opacity;
@@ -228,7 +283,7 @@ function Options(options) {
         // Animation
         this.easing = options.easing != null ? options.easing : "<>";
         this.delay = options.delay != null ? options.delay : 0;
-        this.interval = options.interval != null ? options.interval : 0;
+        this.event_duration = options.interval != null ? options.interval : 0;
         // Popup
         this.popup_background_color = options.popup_background_color != null ? options.popup_background_color : "#000";
         this.popup_background_opacity = options.popup_background_opacity != null ? options.popup_background_opacity : .7;
@@ -397,7 +452,7 @@ function drawGauge(widget) {
     width = opt.width,
     height = opt.height,
     value = opt.value;
-    if (opt.interval==0) opt.interval = 3000;
+    if (opt.event_duration==0) opt.event_duration = 3000;
 
     var animator = new AnimationAbstraction(opt),
     background, foreground, caption,
@@ -1087,8 +1142,10 @@ function drawSpider(widget) {
     values = opt.values,
     // TODO no especificarlo pero darle el valor maximo de las funciones
     max_value = opt.max_value;
-    if (opt.interval==0) opt.interval = 3000;
     
+    if (opt.event_duration==0) opt.event_duration = 1200;
+    if (opt.delay==0) opt.delay = 200;
+    var animator = new AnimationAbstraction(opt);
 
     var i,
     multifun = values[0] instanceof Array,
@@ -1100,11 +1157,10 @@ function drawSpider(widget) {
     stroke_color = "#BBB",
     levels = labels.length < 3 ? 3 : labels.length,
     interval,
+    polygon_radius = 0,
     origin_x = width/2,
-    origin_y = height/2,
-    polygon_radius = 10,
-    line_origin_coord,
-    polygons = paper.set(),
+    origin_y = height/2,    
+    polygons,
     labels_graph = [],
     txt_levels = {
         font: '15px Helvetica, Arial',
@@ -1115,43 +1171,46 @@ function drawSpider(widget) {
 
     if (height > width) height = width;
     interval = (height/2)/(max_value+2);
-    //console.log("width:"+width+" height:"+height+" interval:"+interval+" max_value:"+max_value+" max_value*interval:"+(max_value*interval));
-    for (i=0;i<max_value;i++) {
-        // Raphael:: dibuja tantos polígonos como niveles, cada uno con un radio mayor
-        polygon_radius+=interval;
-        polygons.push(paper.polygon(origin_x, origin_y, polygon_radius, levels)
+
+    // Draw the spider coordinate axis and labels
+    if (spider == null) {
+        polygons = paper.set();
+        //console.log("width:"+width+" height:"+height+" interval:"+interval+" max_value:"+max_value+" max_value*interval:"+(max_value*interval));
+        for (i=0;i<max_value;i++) {
+            // Raphael:: dibuja tantos polígonos como niveles, cada uno con un radio mayor
+            polygon_radius+=interval;
+            polygons.push(paper.polygon(origin_x, origin_y, polygon_radius, levels)
+                .attr({
+                    stroke : stroke_color,
+                    "stroke-width": stroke_width
+                }));
+            paper.text(origin_x+3,origin_y-polygon_radius+(interval/2)+5,i).attr(txt_levels);
+        }
+        paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
+
+        // Sacamos las coordenadas de un polígno mayor para dibujar las etiquetas y las líneas de nivel
+        var line_origin_coord = paper.polygon(origin_x, origin_y, polygon_radius, levels).hide().getCornersArray();
+        for (i=0;i<levels;i++) {
+            // Raphael:: dibuja las lineas horizontales por cada nivel.
+            paper.path(Raphael.format("M{0} {1}L{2} {3}", origin_x, origin_y, line_origin_coord[i].x, line_origin_coord[i].y))
             .attr({
                 stroke : stroke_color,
                 "stroke-width": stroke_width
-            }));
-        paper.text(origin_x+3,origin_y-polygon_radius+(interval/2)+5,i).attr(txt_levels);
+            });
+            // Coloca las etiquetas de nivel. Dependiendo de su posicion alinea el texto Der Cen Izq
+            if (i==0 || i==levels/2) text_align = "middle";
+            else if (i>levels/2) text_align = "end"
+            else text_align = "start";
+
+            labels_graph[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
+            .attr(Aquarious.txt2).attr({
+                "text-anchor": text_align
+            });
+        }
+    } 
+    else {
+        polygons = widget.pop();
     }
-    paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
-
-    // Sacamos las coordenadas de un polígno mayor para dibujar las etiquetas y las líneas de nivel
-    line_origin_coord = paper.polygon(origin_x, origin_y, polygon_radius, levels).hide().getCornersArray();
-    for (i=0;i<levels;i++) {
-        // Raphael:: dibuja las lineas horizontales por cada nivel.
-        paper.path(Raphael.format("M{0} {1}L{2} {3}", origin_x, origin_y, line_origin_coord[i].x, line_origin_coord[i].y))
-        .attr({
-            stroke : stroke_color,
-            "stroke-width": stroke_width
-        });
-        // Coloca las etiquetas de nivel. Dependiendo de su posicion alinea el texto Der Cen Izq
-        if (i==0 || i==levels/2) text_align = "middle";
-        else if (i>levels/2) text_align = "end"
-        else text_align = "start";
-
-        labels_graph[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
-        .attr(Aquarious.txt2).attr({
-            "text-anchor": text_align
-        });
-    }
-
-
-    // crea el atributo levels y max_value dentro del objeto spider
-    spider = paper.set().push(polygons);
-
 
     // Dibuja el gráfico de la función
     var j, coord_x, coord_y,
@@ -1165,9 +1224,9 @@ function drawSpider(widget) {
     over_areas = [],
     over_rect_width = 40,
     parallel_set = paper.set(),
-    fill_opacity = opt.no_fill == true ? 0 : 0.2,
-    color = opt.function_line_colors != null
-    ? opt.function_line_colors : new Array(Aquarious.color),
+    fill_opacity = opt.no_fill ? 0 : 0.2,
+    color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color);
+    
     ms_delay = opt.delay != null
     ? opt.delay : 100,
     ms_interval = opt.interval != null
@@ -1175,6 +1234,8 @@ function drawSpider(widget) {
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
     if (!multifun) values = new Array(values);
+    
+    
     // popup var
     var in_text,
     value_text = opt.value_text != null
@@ -1253,12 +1314,13 @@ function drawSpider(widget) {
                 stroke: color[fun],
                 "stroke-width": function_dot_width,
                 fill: color[fun]
-            })
-            .animate(Raphael.animation({
+            });
+            animator.pushToTimelineDelayed(dots[fun][i], {
                 cx: coord_x,
                 cy: coord_y,
                 r: function_dot_width
-            }, ms_interval, '<>').delay(ms_delay+=200));
+            });
+            
 
             // Dibuja un rectangulo transparente para gestionar los eventos over
             //over_rect_width = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
@@ -1361,10 +1423,11 @@ function drawSpider(widget) {
             opacity: 0,
             "stroke-width": function_line_width,
             "stroke-linejoin": "round"
-        })
-        .animate(Raphael.animation({
+        });
+        animator.pushToTimelineCustom(shape, {interval: opt.interval+400, delay: opt.delay+1300, toTimeline: true},
+        {
             opacity: 1
-        }, ms_interval+400, "<>").delay(ms_delay+=1300));
+        });        
 
         if (multifun) {
             for (i=1;i<=shape_points_array[fun].length;i++) {
@@ -1491,8 +1554,9 @@ function drawSpider(widget) {
             }
     }
 
-    spider.dots = dots;
-    spider.function_shape = shape;
-    paper.renderfix();
-    return spider;
+
+    console.log(ms_delay);
+    spider = paper.set().push(polygons, dots, shape);
+    widget.svg = spider;
+    return widget;
 }
