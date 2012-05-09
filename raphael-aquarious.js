@@ -161,58 +161,69 @@ function AnimationAbstraction(options) {
     this.handle = function(elem, attributes, callback) {
         if (this.has_animation) {
             elem.animate(Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback).delay(this.current_delay));
-            this.total_duration += this.current_event_duration + this.current_delay;
-            this.total_delay += (this.current_delay - this.total_delay);
+            this.total_duration += this.current_event_duration + this.current_delay;            
             console.log("total_delay:"+this.total_delay+" current_delay:"+this.current_delay+" current_event_duration:"+this.current_event_duration);
             this.resetCurrent();
         } else {
             elem.attr(attributes);
-        }        
+        }
     }
     
+    this.handleCustom = function(elem, attributes, callback) {
+        if (options.delay != null) this.nextEventDuration(options.delay);
+        if (options.event_duration != null) this.nextEventDuration(options.event_duration);
+        if (options.easing != null) this.nextEasing(options.easing);
+        this.handle(elem, attributes, callback);        
+    }
+
     /**
-     * stacks the element animation with the current_delay to create a timeLine effect 
+     * stacks the element animation with the current_delay to create a timeLine effect
      * */
     this.pushToTimelineDelayed = function(elem, attributes, callback) {
         this.nextDelay(this.total_delay + this.delay);
-        this.handle(elem, attributes, callback);        
+        this.total_delay += (this.current_delay - this.total_delay);
+        this.handle(elem, attributes, callback);
     }
-    
+
     /**
-     * stacks the element animation with no delay to create a timeLine effect 
+     * stacks the element animation with no delay to create a timeLine effect
      * */
     this.pushToTimelineUndelayed= function(elem, attributes, callback) {
-        this.nextDelay(0);
-        this.handle(elem, attributes, callback);        
+        this.nextDelay(this.total_delay);
+        this.handle(elem, attributes, callback);
     }
-    
+
     /**
-     * animates the element stacking the current_delay to create a timeLine effect 
+     * animates the element stacking the current_delay to create a timeLine effect
      * */
-    this.pushToTimelineCustom = function(elem, options, attributes, callback) {        
-        if (options.delay != null) {
-            if (options.toTimeline) this.nextDelay(this.total_delay + options.delay);
-            else                    this.nextDelay(options.delay);
-        }
+    this.pushToTimelineCustom = function(elem, options, attributes, callback) {
+        var delay = this.total_delay;        
+        if (options.delay != null) delay += options.delay;
+        this.nextDelay(delay);
+        
         if (options.event_duration != null) this.nextEventDuration(options.event_duration);
-        if (options.easing != null) this.nextEasing(options.easing);        
-        this.handle(elem, attributes, callback);        
+        if (options.easing != null) this.nextEasing(options.easing);
+        this.total_delay += (this.current_delay - this.total_delay);
+        this.handle(elem, attributes, callback);
     }
-    
+
     this.nextDelay = function(value) {
+        if (value < 0) value = 0;
         this.current_delay = value;
     }
     this.nextEventDuration = function(value) {
+        if (value < 0) value = 0;
         this.current_event_duration = value;
     }
     this.nextEasing = function(value) {
+        if (value < 0) value = 0;
         this.current_easing = value;
     }
-    
+
     this.resetCurrent = function() {
         this.current_event_duration = this.event_duration;
         this.current_delay = this.delay;
-        this.current_easing = this.easing;        
+        this.current_easing = this.easing;
     }
 }
 
@@ -1142,7 +1153,7 @@ function drawSpider(widget) {
     values = opt.values,
     // TODO no especificarlo pero darle el valor maximo de las funciones
     max_value = opt.max_value;
-    
+
     if (opt.event_duration==0) opt.event_duration = 1200;
     if (opt.delay==0) opt.delay = 200;
     var animator = new AnimationAbstraction(opt);
@@ -1159,7 +1170,7 @@ function drawSpider(widget) {
     interval,
     polygon_radius = 0,
     origin_x = width/2,
-    origin_y = height/2,    
+    origin_y = height/2,
     polygons,
     labels_graph = [],
     txt_levels = {
@@ -1207,7 +1218,7 @@ function drawSpider(widget) {
                 "text-anchor": text_align
             });
         }
-    } 
+    }
     else {
         polygons = widget.pop();
     }
@@ -1226,16 +1237,12 @@ function drawSpider(widget) {
     parallel_set = paper.set(),
     fill_opacity = opt.no_fill ? 0 : 0.2,
     color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color);
-    
-    ms_delay = opt.delay != null
-    ? opt.delay : 100,
-    ms_interval = opt.interval != null
-    ? opt.interval : 1500;
+
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
     if (!multifun) values = new Array(values);
-    
-    
+
+
     // popup var
     var in_text,
     value_text = opt.value_text != null
@@ -1320,7 +1327,7 @@ function drawSpider(widget) {
                 cy: coord_y,
                 r: function_dot_width
             });
-            
+
 
             // Dibuja un rectangulo transparente para gestionar los eventos over
             //over_rect_width = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
@@ -1424,10 +1431,7 @@ function drawSpider(widget) {
             "stroke-width": function_line_width,
             "stroke-linejoin": "round"
         });
-        animator.pushToTimelineCustom(shape, {interval: opt.interval+400, delay: opt.delay+1300, toTimeline: true},
-        {
-            opacity: 1
-        });        
+        animator.pushToTimelineCustom(shape, {interval: opt.interval+400, delay: 1300}, { opacity: 1 });
 
         if (multifun) {
             for (i=1;i<=shape_points_array[fun].length;i++) {
@@ -1482,9 +1486,11 @@ function drawSpider(widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
-                        parallel1.animate(Raphael.animation({
-                            "stroke-opacity": 1
-                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();
+//                        parallel1.animate(Raphael.animation({
+//                            "stroke-opacity": 1
+//                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();                        
+                        animator.nextEventDuration(opt.event_duration-300);
+                        animator.pushToTimelineUndelayed(parallel1, {"stroke-opacity": 1});
                         // linea 2
                         point_aux_origin = perpendicular2_origin.getPointAtLength(gap);
                         point_aux_end = perpendicular2_end.getPointAtLength(gap);
@@ -1494,21 +1500,25 @@ function drawSpider(widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
-                        parallel2.animate(Raphael.animation({
-                            "stroke-opacity": 1
-                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();
+                        animator.nextEventDuration(opt.event_duration-300);
+                        animator.pushToTimelineUndelayed(parallel2, {"stroke-opacity": 1});
                         gap += inc;
                         // Metemos las lineas en un set para poder mostrarlas u ocultarlas en cualquier momento
                         parallel_set.push(parallel1);
                         parallel_set.push(parallel2);
                     }
                     // Ocultamos los objetos que estan debajo para que no hagan una fea aberracion cromatica debido a la suerposicion
-                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
-                        "stroke-width" : 0//function_dot_width*2
-                    }, ms_interval-300, ">").delay(ms_delay-200));
-                    dots[fun_index[fun_index_pointer]][j].animate(Raphael.animation({
-                        "stroke-width" : 0
-                    }, ms_interval-300, ">").delay(ms_delay-200));
+                    
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i-1], {event_duration: opt.event_duration-300, delay:-200, easing:">"},
+                    {"stroke-width" : 0});
+//                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
+//                        "stroke-width" : 0//function_dot_width*2
+//                    }, ms_interval-300, ">").delay(ms_delay-200));
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][j], {event_duration: opt.event_duration-300, delay:-200, easing:">"},
+                    {"stroke-width" : 0});
+//                    dots[fun_index[fun_index_pointer]][j].animate(Raphael.animation({
+//                        "stroke-width" : 0
+//                    }, ms_interval-300, ">").delay(ms_delay-200));
                     perpendicular1_origin.remove();
                     perpendicular1_end.remove();
                     perpendicular2_origin.remove();
@@ -1538,24 +1548,6 @@ function drawSpider(widget) {
         }
     }
 
-    for (i=0;i<polygons.length;i++) {
-        polygons[i].mouseover(function() {
-            this.animate({
-                "stroke-width": 1.5
-            },200, '<');
-        });
-        polygons[i].mouseout(function() {
-            this.animate({
-                "stroke-width": .8
-            },200, '<');
-        });
-        for (j=0;j<values.length;j++) {
-
-            }
-    }
-
-
-    console.log(ms_delay);
     spider = paper.set().push(polygons, dots, shape);
     widget.svg = spider;
     return widget;
