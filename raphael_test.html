@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Raphaël · Animated Chart</title>
+        <title>Raphaël Aquarious · Animated Charts & Widgets</title>
 
         <script src="raphael-min.js" type="text/javascript" charset="utf-8"></script>
         <script src="raphael.primitives.js" type="text/javascript" charset="utf-8"></script>
@@ -11,13 +11,32 @@
         <script type="text/javascript" charset="utf-8">
             window.onload = function () {
 
-
                 asyncEvent = function() {
-                    var input_value = document.getElementById("inputValue").value/100;
-                    gauge1.updateValue(input_value);
-                    gauge2.updateValue(input_value);
-                    gauge3.updateValue(input_value);
+                    var input_value = document.getElementById("inputValue").value;
                     counter3.updateValue(input_value);
+                    gauge1.updateValue(input_value/100);
+                    gauge2.updateValue(input_value/100);
+                    gauge3.updateValue(input_value/100);
+                    spider4.updateValue([[9,5,input_value,4,8],[6,5,5,input_value,8]]);
+                    spider3.updateValue([input_value,input_value,input_value]);
+                }
+                function getRandomInt(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                }                
+                asyncEventRandom = function() {                    
+                    document.getElementById("inputValue").value = "random values frenzy!";
+                    counter1.updateValue(getRandomInt(0,100));
+                    counter2.updateValue(getRandomInt(0,100));
+                    counter3.updateValue(getRandomInt(0,100));
+                    gauge1.updateValue(Math.random());
+                    gauge2.updateValue(Math.random());
+                    gauge3.updateValue(Math.random());
+                    spider4.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
+                                         [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
+                    spider3.updateValue([getRandomInt(0,8),getRandomInt(0,8),getRandomInt(0,8)]);
+                    spider8.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
+                                        [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]])
+                    spider41.updateValue([getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]);
                 }
 
 
@@ -179,13 +198,13 @@
                 //spider_values = [0,0,0,0,0,0,0,0];
 
                 //spider_values = [1,0,1,0,1,0,1,5];
-                spider = new Widget({
+                spider1 = new Widget({
                     type: "spider",
                     id_holder: "holder3",
                     width: 550,
                     height: 300,
                     labels: spider_labels,
-                    values: spider_values,
+                    value: spider_values,
                     max_value: 5,
                     value_text: "impago",
                     function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
@@ -201,13 +220,13 @@
                     "Otros"];
                 spider_values = [[9,5,3,4,8],
                     [6,5,5,4,8]];
-                spider = new Widget({
+                spider4 = new Widget({
                     type: "spider",
                     id_holder: "holder4",
                     width: 1000,
                     height: 600,
                     labels: spider_labels,
-                    values: spider_values,
+                    value: spider_values,
                     max_value: 6,
                     value_text: "cacharro",
                     function_line_width: 9,
@@ -221,13 +240,13 @@
                     "Financiación\nEmpresarial",
                     "Financiación\nPersonal"];
                 spider_values = [2,8,2];
-                spider = new Widget({
+                spider3 = new Widget({
                     type: "spider",
                     id_holder: "holder5",
                     width: 550,
                     height: 1300,
                     labels: spider_labels,
-                    values: spider_values,
+                    value: spider_values,
                     max_value: 8,
                     value_text: "novia"
                 });                  
@@ -246,17 +265,18 @@
                     "Tarjetas"];
                 spider_values = [[2,3,5,6,9,82,1,15,8,9,8],
                     [2,3,5,6,9,82,1,15,8,9,8]];
-                spider = new Widget({
+                spider8 = new Widget({
                     type: "spider",
                     id_holder: "holder6",
                     width: 900,
                     height: 800,
                     labels: spider_labels,
-                    values: spider_values,
+                    value: spider_values,
                     max_value: 6,
                     value_text: "impago",
                     function_line_width: 9,                    
                     function_line_colors:["#91FF22","#2190FF","#FF2190"],
+                    function_dot_width: 10,
                     no_fill: true
                 });  
 
@@ -266,13 +286,13 @@
                     "Financiación\nPersonal",
                     "Hipotecas"];
                 spider_values = [4,3,5,6];
-                spider = new Widget({
+                spider41 = new Widget({
                     type: "spider",
                     id_holder: "holder7",
                     width: 550,
                     height: 300,
                     labels: spider_labels,
-                    values: spider_values,
+                    value: spider_values,
                     max_value: 6,
                     value_text: "impago",
                     function_dot_width: 0 
@@ -301,9 +321,11 @@
         <div id="holder5"></div>
         <div id="holder6"></div>
         <div id="holder7"></div>
+        
         <div style="position: fixed; top: 100px; right: 200px;">
             <input id="inputValue" type="text" value="typeNewValue">
             <button onmouseup="asyncEvent()">try!</button>
+            <button onmouseup="asyncEventRandom()">Random Values</button>
         </div>
     </body>
 </html>

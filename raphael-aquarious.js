@@ -159,21 +159,24 @@ function AnimationAbstraction(options) {
     this.current_easing = this.easing;
 
     this.handle = function(elem, attributes, callback) {
+        var animation = null;
         if (this.has_animation) {
-            elem.animate(Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback).delay(this.current_delay));
-            this.total_duration += this.current_event_duration + this.current_delay;            
-            console.log("total_delay:"+this.total_delay+" current_delay:"+this.current_delay+" current_event_duration:"+this.current_event_duration);
+            animation = Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback);
+            elem.animate(animation.delay(this.current_delay));
+            this.total_duration += this.current_event_duration + this.current_delay;
+            //console.log("total_delay:"+this.total_delay+" current_delay:"+this.current_delay+" current_event_duration:"+this.current_event_duration);
             this.resetCurrent();
         } else {
             elem.attr(attributes);
         }
+        return animation;
     }
-    
-    this.handleCustom = function(elem, attributes, callback) {
+
+    this.handleCustom = function(elem, options, attributes, callback) {
         if (options.delay != null) this.nextEventDuration(options.delay);
         if (options.event_duration != null) this.nextEventDuration(options.event_duration);
         if (options.easing != null) this.nextEasing(options.easing);
-        this.handle(elem, attributes, callback);        
+        return this.handle(elem, attributes, callback);
     }
 
     /**
@@ -182,7 +185,7 @@ function AnimationAbstraction(options) {
     this.pushToTimelineDelayed = function(elem, attributes, callback) {
         this.nextDelay(this.total_delay + this.delay);
         this.total_delay += (this.current_delay - this.total_delay);
-        this.handle(elem, attributes, callback);
+        return this.handle(elem, attributes, callback);
     }
 
     /**
@@ -190,21 +193,25 @@ function AnimationAbstraction(options) {
      * */
     this.pushToTimelineUndelayed= function(elem, attributes, callback) {
         this.nextDelay(this.total_delay);
-        this.handle(elem, attributes, callback);
+        return this.handle(elem, attributes, callback);
     }
 
     /**
      * animates the element stacking the current_delay to create a timeLine effect
      * */
     this.pushToTimelineCustom = function(elem, options, attributes, callback) {
-        var delay = this.total_delay;        
+        var delay = this.total_delay;
         if (options.delay != null) delay += options.delay;
         this.nextDelay(delay);
-        
+
         if (options.event_duration != null) this.nextEventDuration(options.event_duration);
         if (options.easing != null) this.nextEasing(options.easing);
         this.total_delay += (this.current_delay - this.total_delay);
-        this.handle(elem, attributes, callback);
+        return this.handle(elem, attributes, callback);
+    }
+
+    this.syncAnimation = function(elem, options, attributes, callback) {
+
     }
 
     this.nextDelay = function(value) {
@@ -313,9 +320,8 @@ function Options(options) {
                 this.label = options.label != null ? options.label : "";
                 break;
             case "spider":
-                if (options.labels != null && options.values != null && options.max_value != null ) {
+                if (options.labels != null && options.value != null && options.max_value != null ) {
                     this.labels = options.labels;
-                    this.values = options.values;
                     this.max_value = options.max_value;
                 } else throw "RaphaelAquarious[spider]: missing options";
                 this.value_text = options.value_text != null ? options.value_text : "";
@@ -720,7 +726,7 @@ function create2AxisGraph (paper, width, height, values, options) {
     fill,
     dots = [],
     over_areas = [],
-    over_rect_width,
+    over_rect_length,
     graph = paper.set();
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
@@ -800,7 +806,7 @@ function create2AxisGraph (paper, width, height, values, options) {
     graph_width = width - x_graph;
     graph_height = height - 60;
     aux_value = gaps_y;
-    over_rect_width = width/values_x.length;
+    over_rect_length = width/values_x.length;
     paper.setStart();
     // Dibuja los valores del eje y
     for (i=0;i<=gaps_y;i++) {
@@ -966,7 +972,7 @@ function create2AxisGraph (paper, width, height, values, options) {
             ms_delay+=ms_interval;
             // Dibuja un rectángulo transparente para gestionar los eventos over
             if (multifun) {
-                over_areas[fun][i] = paper.rect(x-(over_rect_width/2), y_value-8, over_rect_width, 16)
+                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_value-8, over_rect_length, 16)
                 .attr({
                     stroke: "none",
                     fill: color[fun],
@@ -974,7 +980,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                 });
             }
             else {
-                over_areas[fun][i] = paper.rect(x-(over_rect_width/2), y_margin, over_rect_width, graph_height)
+                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, graph_height)
                 .attr({
                     stroke: "none",
                     fill: color[fun],
@@ -1150,7 +1156,7 @@ function drawSpider(widget) {
     width = opt.width,
     height = opt.height,
     labels = opt.labels,
-    values = opt.values,
+    values = opt.value,
     // TODO no especificarlo pero darle el valor maximo de las funciones
     max_value = opt.max_value;
 
@@ -1188,7 +1194,7 @@ function drawSpider(widget) {
         polygons = paper.set();
         //console.log("width:"+width+" height:"+height+" interval:"+interval+" max_value:"+max_value+" max_value*interval:"+(max_value*interval));
         for (i=0;i<max_value;i++) {
-            // Raphael:: dibuja tantos polígonos como niveles, cada uno con un radio mayor
+            // Raphael:: draw as much polygons as levels, each one with a bigger radius
             polygon_radius+=interval;
             polygons.push(paper.polygon(origin_x, origin_y, polygon_radius, levels)
                 .attr({
@@ -1220,20 +1226,19 @@ function drawSpider(widget) {
         }
     }
     else {
-        polygons = widget.pop();
+        polygons = spider.polygons;
     }
 
-    // Dibuja el gráfico de la función
     var j, coord_x, coord_y,
     level,
-    shape,
+    shape = [],
     shape_points_array = [],
     shape_points,
     x_aux = [],
     y_aux = [],
     dots = [],
     over_areas = [],
-    over_rect_width = 40,
+    over_radius = interval*.6,
     parallel_set = paper.set(),
     fill_opacity = opt.no_fill ? 0 : 0.2,
     color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color);
@@ -1244,7 +1249,7 @@ function drawSpider(widget) {
 
 
     // popup var
-    var in_text,
+    var in_text, text_svg,
     value_text = opt.value_text != null
     ? " "+opt.value_text : "",
     popup_background = opt.popup_background != null
@@ -1256,11 +1261,11 @@ function drawSpider(widget) {
     label_heights = [];
     // Metemos en una variable los labels ocultos para calcular tamanios en el posicionamiento del popup y sus label
     for (i=0;i<labels.length;i++) {
-        shape = paper.text(0,0,labels[i]).attr(Aquarious.txt).attr({
+        text_svg = paper.text(0,0,labels[i]).attr(Aquarious.txt).attr({
             "font-weight": "bold"
         });
-        label_heights[i] = shape.getBBox().height;
-        shape.remove();
+        label_heights[i] = text_svg.getBBox().height;
+        text_svg.remove();
     }
     label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
     y=30;
@@ -1287,6 +1292,14 @@ function drawSpider(widget) {
             in_text = " in";
     }
 
+    // retrieve widget objects if there are
+    if (spider != null) {
+        dots = spider.dots;
+        over_areas = spider.over_areas;
+        shape = spider.shape;
+        parallel_set = spider.parallel_set;
+    }
+
     for (fun=0;fun<values.length;fun++){
         shape_points_array[fun] = [];
         for (i=0;i<values[fun].length;i++) {
@@ -1304,11 +1317,14 @@ function drawSpider(widget) {
         }
     }
 
-    for (fun=0;fun<shape_points_array.length;fun++){
+    // Draw the function lines
+    for (fun=0;fun<shape_points_array.length;fun++){        
         shape_points = "M";
-        dots[fun] = [];
-        over_areas[fun] = [];
-        for (i=0;i<shape_points_array[fun].length;i++) {
+        if (spider == null) {
+            dots[fun] = [];
+            over_areas[fun] = [];
+        }
+        for (i=0;i<shape_points_array[fun].length;i++) {            
             coord_x = shape_points_array[fun][i].x;
             coord_y = shape_points_array[fun][i].y;
             shape_points+=coord_x+","+coord_y+" L";
@@ -1316,124 +1332,168 @@ function drawSpider(widget) {
             x_aux[i] = coord_x;
             y_aux[i] = coord_y;
             // Raphael:: dibuja un circulo por cada coordenada para simbolizar "el punto gordo"
-            dots[fun][i] = paper.circle(origin_x,origin_y,0)
-            .attr({
-                stroke: color[fun],
-                "stroke-width": function_dot_width,
-                fill: color[fun]
-            });
-            animator.pushToTimelineDelayed(dots[fun][i], {
-                cx: coord_x,
-                cy: coord_y,
-                r: function_dot_width
-            });
+
+            if (spider == null) {
+                dots[fun][i] = paper.circle(origin_x,origin_y,0.01)
+                .attr({
+                    stroke: color[fun],
+                    "stroke-width": function_dot_width,
+                    fill: color[fun]
+                });
+                animator.pushToTimelineDelayed(dots[fun][i], {
+                    cx: coord_x,
+                    cy: coord_y,
+                    r: function_dot_width
+                });
+            } else {
+                animator.pushToTimelineUndelayed(dots[fun][i], {
+                    cx: coord_x,
+                    cy: coord_y,
+                    r: function_dot_width
+                });
+            }
 
 
             // Dibuja un rectangulo transparente para gestionar los eventos over
-            //over_rect_width = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
-            over_rect_width = 32;
-            over_areas[fun][i] = paper.rect(coord_x-(over_rect_width/2), coord_y-(over_rect_width/2), over_rect_width, over_rect_width)
-            .attr({
-                stroke: "none",
-                fill: color[fun],
-                "fill-opacity": 0
-            });
-            (function (x, y, index, fun_index) {
-                over_areas[fun_index][i].mouseover(function() {
-                    var lx, ly;
-                    dots[fun_index][index].animate({
-                        transform: 's1.5',
-                        fill: "#fff"
-                    },200, '>');
-                    clearTimeout(leave_timer);
-                    label[0].attr({
-                        text: values[fun_index][index] + value_text + (value_text != "" && values[fun_index][index] != 1 ? "s" : "") + in_text
-                    });
-                    ly = 22 + label_heights[index]/2;
-                    label[1].attr({
-                        text: labels[index],
-                        fill: color[fun_index],
-                        y: ly
-                    });
-                    // Si se solapan lineas o puntos se gestionan para su correcta visualizacions
-                    for (fun=0;fun<values.length-1;fun++) {
-                        if (fun != fun_index &&
-                            shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
-                            shape_points_array[fun][index].y == shape_points_array[fun_index][index].y) {
-                            ly += label_heights[index]
-                            dots[fun_index][index].animate({
-                                transform: 's1.8',
-                                fill: color[fun]
-                            },200, '>');
-                            label[fun+2].attr({
-                                text: labels[index],
-                                fill: color[fun],
-                                opacity: 1,
-                                y: ly
-                            });
-                        //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
-                        }
-                        else {
-                            label[fun+2].attr({
-                                opacity: 0,
-                                y: 30
-                            });
-                        }
-                    }
-                    // Dibuja el popup balloon
-                    var side = "right";
-                    if (x + frame.getBBox().width > 333) {
-                        side = "left";
-                    }
-                    var ppp = paper.popup(x, y, label, side, 1),
-                    anim = Raphael.animation({
-                        path: ppp.path,
-                        transform: ["t", ppp.dx, ppp.dy]
-                    }, 250 * is_label_visible);
-                    // Calcula las nuevas coordeandas de los elementos del popup
-                    lx = label[0].transform()[0][1] + ppp.dx;
-                    ly = label[0].transform()[0][2] + ppp.dy;
-                    frame.show().stop().animate(anim);
+            if (spider == null) {
+                //over_radius = values[fun][i]*16 < 80 && values[fun][i]*16 > 18 ? values[fun][i]*16 : 40;
+                over_areas[fun][i] = paper.circle(coord_x, coord_y, over_radius)
+                .attr({
+                    stroke: "none",
+                    fill: color[fun],
+                    "fill-opacity": 0
+                });
+            } else {
+                animator.pushToTimelineUndelayed(over_areas[fun][i], {
+                    cx: coord_x,
+                    cy: coord_y
+                });
+            }
 
-                    for (i=0;i<label.length;i++) {
-                        label[i].show().stop().animateWith(frame, anim, {
-                            transform: ["t", lx, ly]
-                        }, 250 * is_label_visible);
-                    }
-                    is_label_visible = true;
-                    is_label_visible = true;
-                });
-                over_areas[fun_index][i].mouseout(function() {
-                    for (var i=1;i<values.length;i++) {
-                        label[i+1].attr({
-                            opacity: 0
+            if (spider == null) {
+                function deploy_popup (x, y, index, fun_index) {
+                    over_areas[fun_index][i].mouseover(function() {
+                        var lx, ly;
+                        dots[fun_index][index].animate({
+                            transform: 's1.5',
+                            fill: "#fff"
+                        },200, '>');
+                        clearTimeout(leave_timer);
+                        label[0].attr({
+                            text: values[fun_index][index] + value_text + (value_text != "" && values[fun_index][index] != 1 ? "s" : "") + in_text
                         });
-                    }
-                    dots[fun_index][index].animate({
-                        transform: 's1',
-                        fill: color[fun_index]
-                    },400, '<');
-                    leave_timer = setTimeout(function () {
-                        frame.hide();
-                        label.hide();
-                        is_label_visible = false;
-                    }, 1);
-                });
-            })(coord_x, coord_y, i, fun);
+                        ly = 22 + label_heights[index]/2;
+                        label[1].attr({
+                            text: labels[index],
+                            fill: color[fun_index],
+                            y: ly
+                        });
+                        // Si se solapan lineas o puntos se gestionan para su correcta visualizacions
+                        for (fun=0;fun<values.length-1;fun++) {
+                            if (fun != fun_index &&
+                                shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
+                                shape_points_array[fun][index].y == shape_points_array[fun_index][index].y) {
+                                ly += label_heights[index]
+                                dots[fun_index][index].animate({
+                                    transform: 's1.8',
+                                    fill: color[fun]
+                                },200, '>');
+                                label[fun+2].attr({
+                                    text: labels[index],
+                                    fill: color[fun],
+                                    opacity: 1,
+                                    y: ly
+                                });
+                            //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
+                            }
+                            else {
+                                label[fun+2].attr({
+                                    opacity: 0,
+                                    y: 30
+                                });
+                            }
+                        }
+                        // Dibuja el popup balloon
+                        var side = "right";
+                        if (x + frame.getBBox().width > 333) {
+                            side = "left";
+                        }
+                        var ppp = paper.popup(x, y, label, side, 1),
+                        anim = Raphael.animation({
+                            path: ppp.path,
+                            transform: ["t", ppp.dx, ppp.dy]
+                        }, 250 * is_label_visible);
+                        // Calcula las nuevas coordeandas de los elementos del popup
+                        lx = label[0].transform()[0][1] + ppp.dx;
+                        ly = label[0].transform()[0][2] + ppp.dy;
+                        frame.show().stop().animate(anim);
+
+                        for (i=0;i<label.length;i++) {
+                            label[i].show().stop().animateWith(frame, anim, {
+                                transform: ["t", lx, ly]
+                            }, 250 * is_label_visible);
+                        }
+                        is_label_visible = true;
+                        is_label_visible = true;
+                    });
+                    over_areas[fun_index][i].mouseout(function() {
+                        for (var i=1;i<values.length;i++) {
+                            label[i+1].attr({
+                                opacity: 0
+                            });
+                        }
+                        dots[fun_index][index].animate({
+                            transform: 's1',
+                            fill: color[fun_index]
+                        },400, '<');
+                        leave_timer = setTimeout(function () {
+                            frame.hide();
+                            label.hide();
+                            is_label_visible = false;
+                        }, 1);
+                    });
+                }
+            }
+            else {
+                // Removes event handlers of older over_areas
+                over_areas[fun][i].unmouseover();
+                over_areas[fun][i].unmouseout();
+            }
+            deploy_popup(coord_x, coord_y, i, fun);
+
+
+
         }
         shape_points+="z";
-        shape = paper.path(shape_points)
-        .attr({
-            stroke : color[fun],
-            fill: color[fun],
-            "fill-opacity": fill_opacity,
-            opacity: 0,
-            "stroke-width": function_line_width,
-            "stroke-linejoin": "round"
-        });
-        animator.pushToTimelineCustom(shape, {interval: opt.interval+400, delay: 1300}, { opacity: 1 });
+        if (spider == null) {
+            shape[fun] = paper.path(shape_points)
+            .attr({
+                stroke : color[fun],
+                fill: color[fun],
+                "fill-opacity": fill_opacity,
+                opacity: 0,
+                "stroke-width": function_line_width,
+                "stroke-linejoin": "round"
+            });
+            animator.pushToTimelineCustom(shape[fun], {
+                interval: opt.interval+400,
+                delay: 1300
+            }, {
+                opacity: 1
+            });
+        } else {
+            animator.pushToTimelineCustom(shape[fun], {
+                delay: 0
+            }, {
+                path: shape_points
+            });
+        }
+
 
         if (multifun) {
+            parallel_set.forEach(function(e) {
+                e.remove();
+            });
             for (i=1;i<=shape_points_array[fun].length;i++) {
                 // Dibuja las lineas multiples en caso de que varios valores tengan los mismos valores entre dos puntos
                 var angle, path_aux_size, gap, inc,
@@ -1486,11 +1546,10 @@ function drawSpider(widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
-//                        parallel1.animate(Raphael.animation({
-//                            "stroke-opacity": 1
-//                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();                        
-                        animator.nextEventDuration(opt.event_duration-300);
-                        animator.pushToTimelineUndelayed(parallel1, {"stroke-opacity": 1});
+                        //                        parallel1.animate(Raphael.animation({
+                        //                            "stroke-opacity": 1
+                        //                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();
+
                         // linea 2
                         point_aux_origin = perpendicular2_origin.getPointAtLength(gap);
                         point_aux_end = perpendicular2_end.getPointAtLength(gap);
@@ -1500,25 +1559,55 @@ function drawSpider(widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
-                        animator.nextEventDuration(opt.event_duration-300);
-                        animator.pushToTimelineUndelayed(parallel2, {"stroke-opacity": 1});
+
+                        if (spider == null) {
+                            animator.nextEventDuration(opt.event_duration-300);
+                            animator.pushToTimelineUndelayed(parallel1, {
+                                "stroke-opacity": 1
+                            });
+                            animator.nextEventDuration(opt.event_duration-300);
+                            animator.pushToTimelineUndelayed(parallel2, {
+                                "stroke-opacity": 1
+                            });
+                        } else {
+                            animator.pushToTimelineDelayed(parallel1, {
+                                "stroke-opacity": 1
+                            });
+                            animator.pushToTimelineDelayed(parallel2, {
+                                "stroke-opacity": 1
+                            });
+                        }
                         gap += inc;
                         // Metemos las lineas en un set para poder mostrarlas u ocultarlas en cualquier momento
                         parallel_set.push(parallel1);
                         parallel_set.push(parallel2);
                     }
                     // Ocultamos los objetos que estan debajo para que no hagan una fea aberracion cromatica debido a la suerposicion
-                    
-                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i-1], {event_duration: opt.event_duration-300, delay:-200, easing:">"},
-                    {"stroke-width" : 0});
-//                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
-//                        "stroke-width" : 0//function_dot_width*2
-//                    }, ms_interval-300, ">").delay(ms_delay-200));
-                    animator.handleCustom(dots[fun_index[fun_index_pointer]][j], {event_duration: opt.event_duration-300, delay:-200, easing:">"},
-                    {"stroke-width" : 0});
-//                    dots[fun_index[fun_index_pointer]][j].animate(Raphael.animation({
-//                        "stroke-width" : 0
-//                    }, ms_interval-300, ">").delay(ms_delay-200));
+
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i-1], {
+                        event_duration: opt.event_duration-300,
+                        delay:200,
+                        easing:">"
+                    },
+
+                    {
+                        "stroke-width" : 10
+                    });
+                    //                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
+                    //                        "stroke-width" : 0//function_dot_width*2
+                    //                    }, ms_interval-300, ">").delay(ms_delay-200));
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][j], {
+                        event_duration: opt.event_duration-300,
+                        delay:200,
+                        easing:">"
+                    },
+
+                    {
+                        "stroke-width" : 10
+                    });
+                    //                    dots[fun_index[fun_index_pointer]][j].animate(Raphael.animation({
+                    //                        "stroke-width" : 0
+                    //                    }, ms_interval-300, ">").delay(ms_delay-200));
                     perpendicular1_origin.remove();
                     perpendicular1_end.remove();
                     perpendicular2_origin.remove();
@@ -1548,7 +1637,13 @@ function drawSpider(widget) {
         }
     }
 
-    spider = paper.set().push(polygons, dots, shape);
+    //spider = paper.set().push(shape,over_areas,dots,polygons);
+    spider = new Object();
+    spider.polygons = polygons;
+    spider.dots = dots;
+    spider.over_areas = over_areas;
+    spider.shape = shape;
+    spider.parallel_set = parallel_set;
     widget.svg = spider;
     return widget;
 }
