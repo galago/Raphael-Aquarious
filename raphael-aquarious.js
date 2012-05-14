@@ -173,7 +173,7 @@ function AnimationAbstraction(options) {
     }
 
     this.handleCustom = function(elem, options, attributes, callback) {
-        if (options.delay != null) this.nextEventDuration(options.delay);
+        if (options.delay != null) this.nextDelay(options.delay);
         if (options.event_duration != null) this.nextEventDuration(options.event_duration);
         if (options.easing != null) this.nextEasing(options.easing);
         return this.handle(elem, attributes, callback);
@@ -183,7 +183,7 @@ function AnimationAbstraction(options) {
      * stacks the element animation with the current_delay to create a timeLine effect
      * */
     this.pushToTimelineDelayed = function(elem, attributes, callback) {
-        this.nextDelay(this.total_delay + this.delay);
+        this.nextDelay(this.total_delay + this.current_delay);
         this.total_delay += (this.current_delay - this.total_delay);
         return this.handle(elem, attributes, callback);
     }
@@ -272,7 +272,7 @@ function Options(options) {
         " color_alt: " + this.color_alt + "\n" +
         " easing: " + this.easing + "\n" +
         " delay: " + this.delay + "\n" +
-        " interval: " + this.interval + "\n" +
+        " event_duration: " + this.event_duration + "\n" +
         " popup_background_color: " + this.popup_background_color + "\n" +
         " popup_background_opacity: " + this.popup_background_opacity + "\n" +
         " has_popup: " + this.has_popup + "\n" +
@@ -301,7 +301,7 @@ function Options(options) {
         // Animation
         this.easing = options.easing != null ? options.easing : "<>";
         this.delay = options.delay != null ? options.delay : 0;
-        this.event_duration = options.interval != null ? options.interval : 0;
+        this.event_duration = options.event_duration != null ? options.event_duration : 0;
         // Popup
         this.popup_background_color = options.popup_background_color != null ? options.popup_background_color : "#000";
         this.popup_background_opacity = options.popup_background_opacity != null ? options.popup_background_opacity : .7;
@@ -327,8 +327,8 @@ function Options(options) {
                 this.value_text = options.value_text != null ? options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
                 this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
-                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
-                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                this.function_line_width = options.function_line_width != null ? options.function_line_width : 6;
+                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 8;
                 break;
             case "___template":
                 this._______ = options._______ != null ? options._______ : null;
@@ -1341,22 +1341,24 @@ function drawSpider(widget) {
             // Raphael:: dibuja un circulo por cada coordenada para simbolizar "el punto gordo"
 
             if (spider == null) {
-                dots[fun][i] = paper.circle(origin_x,origin_y,0.01)
+                dots[fun][i] = paper.circle(origin_x,origin_y,0)
                 .attr({
                     stroke: color[fun],
-                    "stroke-width": function_dot_width,
+                    "stroke-width": 0,
                     fill: color[fun]
                 });
                 animator.pushToTimelineDelayed(dots[fun][i], {
                     cx: coord_x,
                     cy: coord_y,
-                    r: function_dot_width
+                    r: function_dot_width/2,
+                    "stroke-width": function_dot_width/2
                 });
             } else {
                 animator.pushToTimelineUndelayed(dots[fun][i], {
                     cx: coord_x,
                     cy: coord_y,
-                    r: function_dot_width
+                    r: function_dot_width/2,
+                    "stroke-width": function_dot_width/2
                 });
             }
 
@@ -1378,13 +1380,17 @@ function drawSpider(widget) {
             }
 
             if (spider == null) {
-                function deploy_popup (x, y, index, fun_index) {
+                function over_events (x, y, index, fun_index) {
                     over_areas[fun_index][i].mouseover(function() {
                         var lx, ly;
-                        dots[fun_index][index].animate({
+                        animator.handleCustom(dots[fun_index][index], {
+                            event_duration: 200,
+                            delay: 0,
+                            easing: '>'
+                        }, {
                             transform: 's1.5',
                             fill: "#fff"
-                        },200, '>');
+                        });
                         clearTimeout(leave_timer);
                         label[0].attr({
                             text: values[fun_index][index] + value_text + (value_text != "" && values[fun_index][index] != 1 ? "s" : "") + in_text
@@ -1400,11 +1406,15 @@ function drawSpider(widget) {
                             if (fun != fun_index &&
                                 shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
                                 shape_points_array[fun][index].y == shape_points_array[fun_index][index].y) {
-                                ly += label_heights[index]
-                                dots[fun_index][index].animate({
+                                ly += label_heights[index];
+                                animator.handleCustom(dots[fun_index][index], {
+                                    event_duration: 200,
+                                    delay: 0,
+                                    easing: '>'
+                                }, {
                                     transform: 's1.8',
                                     fill: color[fun]
-                                },200, '>');
+                                });
                                 label[fun+2].attr({
                                     text: labels[index],
                                     fill: color[fun],
@@ -1442,8 +1452,6 @@ function drawSpider(widget) {
                         }
                         is_label_visible = true;
                         is_label_visible = true;
-                        ppp.remove();
-                        ppp = null;
                     });
                     over_areas[fun_index][i].mouseout(function() {
                         for (var i=1;i<values.length;i++) {
@@ -1451,10 +1459,14 @@ function drawSpider(widget) {
                                 opacity: 0
                             });
                         }
-                        dots[fun_index][index].animate({
+                        animator.handleCustom(dots[fun_index][index], {
+                            event_duration: 400,
+                            delay: 0,
+                            easing: '<'
+                        }, {
                             transform: 's1',
                             fill: color[fun_index]
-                        },400, '<');
+                        });
                         leave_timer = setTimeout(function () {
                             frame.hide();
                             label.hide();
@@ -1468,7 +1480,7 @@ function drawSpider(widget) {
                 over_areas[fun][i].unmouseover();
                 over_areas[fun][i].unmouseout();
             }
-            deploy_popup(coord_x, coord_y, i, fun);
+            over_events(coord_x, coord_y, i, fun);
 
 
 
@@ -1485,8 +1497,7 @@ function drawSpider(widget) {
                 "stroke-linejoin": "round"
             });
             animator.pushToTimelineCustom(shape[fun], {
-                interval: opt.interval+400,
-                delay: 1300
+                delay: opt.event_duration
             }, {
                 opacity: 1
             });
@@ -1579,10 +1590,14 @@ function drawSpider(widget) {
                                 "stroke-opacity": 1
                             });
                         } else {
-                            animator.pushToTimelineDelayed(parallel1, {
+                            animator.handleCustom(parallel1, {
+                                delay: opt.event_duration                            
+                            }, {
                                 "stroke-opacity": 1
                             });
-                            animator.pushToTimelineDelayed(parallel2, {
+                            animator.handleCustom(parallel2, {
+                                delay: opt.event_duration                            
+                            }, {
                                 "stroke-opacity": 1
                             });
                         }
@@ -1591,32 +1606,6 @@ function drawSpider(widget) {
                         parallel_set.push(parallel1);
                         parallel_set.push(parallel2);
                     }
-                    // Ocultamos los objetos que estan debajo para que no hagan una fea aberracion cromatica debido a la suerposicion
-
-                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i-1], {
-                        event_duration: opt.event_duration-300,
-                        delay:200,
-                        easing:">"
-                    },
-
-                    {
-                        "stroke-width" : 10
-                    });
-                    //                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
-                    //                        "stroke-width" : 0//function_dot_width*2
-                    //                    }, ms_interval-300, ">").delay(ms_delay-200));
-                    animator.handleCustom(dots[fun_index[fun_index_pointer]][j], {
-                        event_duration: opt.event_duration-300,
-                        delay:200,
-                        easing:">"
-                    },
-
-                    {
-                        "stroke-width" : 10
-                    });
-                    //                    dots[fun_index[fun_index_pointer]][j].animate(Raphael.animation({
-                    //                        "stroke-width" : 0
-                    //                    }, ms_interval-300, ">").delay(ms_delay-200));
                     perpendicular1_origin.remove();
                     perpendicular1_end.remove();
                     perpendicular2_origin.remove();
@@ -1626,6 +1615,22 @@ function drawSpider(widget) {
                 if (number_lines > 1 && number_lines%2 == 1) {
                     path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", shape_points_array[fun][i-1].x, shape_points_array[fun][i-1].y, shape_points_array[fun][j].x, shape_points_array[fun][j].y);
 
+                }
+                // Behaviour for dots with 2+ values
+                for (fun_aux=fun-1;fun_aux>=0;fun_aux--) {
+                    if (fun != fun_aux &&
+                        shape_points_array[fun][j].x == shape_points_array[fun_aux][j].x &&
+                        shape_points_array[fun][j].y == shape_points_array[fun_aux][j].y) {
+                        if (spider == null) {
+                            animator.pushToTimelineUndelayed(dots[fun_aux][j], {
+                                "stroke-width" : function_dot_width*1.2
+                            });                                                 
+                        } else {
+                            animator.handle(dots[fun_aux][j], {
+                                "stroke-width" : function_dot_width*1.2
+                            });                             
+                        }                        
+                    }
                 }
             }
         }

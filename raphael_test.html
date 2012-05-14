@@ -22,8 +22,8 @@
                 }
                 function getRandomInt(min, max) {
                     return Math.floor(Math.random() * (max - min + 1)) + min;
-                }                
-                asyncEventRandom = function() {                    
+                }
+                asyncEventRandom = function() {
                     document.getElementById("inputValue").value = "random values frenzy!";
                     counter1.updateValue(getRandomInt(0,100));
                     counter2.updateValue(getRandomInt(0,100));
@@ -32,10 +32,10 @@
                     gauge2.updateValue(Math.random());
                     gauge3.updateValue(Math.random());
                     spider4.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
-                                         [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
+                        [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
                     spider3.updateValue([getRandomInt(0,8),getRandomInt(0,8),getRandomInt(0,8)]);
                     spider8.updateValue([[getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)],
-                                        [getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)]])
+                        [getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)]])
                     spider41.updateValue([getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]);
                 }
 
@@ -65,11 +65,11 @@
                     height: 300,
                     value: 1234,
                     char_size: 50,
-                    interval: 1000,
+                    event_duration: 1000,
                     delay:2000
-                    
+
                 }).updateValue(20);
-                
+
                 counter3 = new Widget({
                     type: "counter",
                     id_holder: "holder_counter3",
@@ -208,12 +208,13 @@
                     max_value: 5,
                     value_text: "impago",
                     function_line_width: 8,
-                    function_dot_width: 5,                    
+                    function_dot_width: 10,
                     function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
-                    no_fill: true
+                    no_fill: true,
+                    event_duration: 300
                 });
-                
-                
+
+
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
@@ -232,10 +233,11 @@
                     max_value: 6,
                     value_text: "cacharro",
                     function_line_width: 8,
-                    function_dot_width: 5,
+                    function_dot_width: 15,
+                    event_duration: 600,
                     function_line_colors:["#FDD12A","#F00402"],
-                    no_fill: true
-                });                
+                    no_fill: true                    
+                });
 
 
                 spider_labels = ["Alquileres",
@@ -252,9 +254,10 @@
                     max_value: 8,
                     value_text: "novia",
                     function_line_width: 14,
-                    function_dot_width: 10                
-                });                  
-                
+                    function_dot_width: 16,
+                    has_animation: false
+                });
+
 
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
@@ -278,11 +281,11 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "impago",
-                    function_line_width: 9,                    
+                    function_line_width: 9,
+                    function_dot_width: 13,
                     function_line_colors:["#91FF22","#2190FF","#FF2190"],
-                    function_dot_width: 5,
                     no_fill: true
-                });  
+                });
 
 
                 spider_labels = ["Alquileres",
@@ -299,8 +302,8 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "impago",
-                    function_dot_width: 0 
-                });                 
+                    function_dot_width: 0
+                });
 
 
             };
@@ -325,7 +328,7 @@
         <div id="holder5"></div>
         <div id="holder6"></div>
         <div id="holder7"></div>
-        
+
         <div style="position: fixed; top: 100px; right: 200px;">
             <input id="inputValue" type="text" value="typeNewValue">
             <button onmouseup="asyncEvent()">try!</button>
