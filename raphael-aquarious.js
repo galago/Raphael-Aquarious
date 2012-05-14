@@ -1380,9 +1380,9 @@ function drawSpider(widget) {
             }
 
             if (spider == null) {
-                function over_events (x, y, index, fun_index) {
+                function over_events (x, y, index, fun_index) { 
                     over_areas[fun_index][i].mouseover(function() {
-                        var lx, ly;
+                        var lx, ly, share_dot;
                         animator.handleCustom(dots[fun_index][index], {
                             event_duration: 200,
                             delay: 0,
@@ -1402,33 +1402,45 @@ function drawSpider(widget) {
                             y: ly
                         });
                         // Si se solapan lineas o puntos se gestionan para su correcta visualizacions
-                        for (fun=0;fun<values.length-1;fun++) {
-                            if (fun != fun_index &&
-                                shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
-                                shape_points_array[fun][index].y == shape_points_array[fun_index][index].y) {
-                                ly += label_heights[index];
-                                animator.handleCustom(dots[fun_index][index], {
-                                    event_duration: 200,
-                                    delay: 0,
-                                    easing: '>'
-                                }, {
-                                    transform: 's1.8',
-                                    fill: color[fun]
-                                });
-                                label[fun+2].attr({
-                                    text: labels[index],
-                                    fill: color[fun],
-                                    opacity: 1,
-                                    y: ly
-                                });
-                            //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
-                            }
-                            else {
+                        for (fun=0;fun<values.length;fun++) {
+                            if (fun < values.length-1) {
                                 label[fun+2].attr({
                                     opacity: 0,
                                     y: 30
                                 });
                             }
+                            if (fun != fun_index) {
+                                share_dot =
+                                shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
+                                shape_points_array[fun][index].y == shape_points_array[fun_index][index].y;
+
+                                if (share_dot) {
+                                    ly += label_heights[index];
+                                    animator.handleCustom(dots[fun_index][index], {
+                                        event_duration: 200,
+                                        delay: 0,
+                                        easing: '>'
+                                    }, {
+                                        transform: 's1.8',
+                                        fill: color[fun]
+                                    });
+                                    label[fun+2].attr({
+                                        text: labels[index],
+                                        fill: color[fun],
+                                        opacity: 1,
+                                        y: ly
+                                    });
+                                } else {
+                                    animator.handleCustom(shape[fun], {
+                                        event_duration: 200,
+                                        delay: 0,
+                                        easing: '>'
+                                    }, {
+                                        opacity: 0.2
+                                    });
+                                }
+                            }
+
                         }
                         // Dibuja el popup balloon
                         var side = "right";
@@ -1454,10 +1466,19 @@ function drawSpider(widget) {
                         is_label_visible = true;
                     });
                     over_areas[fun_index][i].mouseout(function() {
-                        for (var i=1;i<values.length;i++) {
-                            label[i+1].attr({
-                                opacity: 0
+                        for (var i=0;i<values.length;i++) {
+                            animator.handleCustom(shape[i], {
+                                event_duration: 200,
+                                delay: 0,
+                                easing: '>'
+                            }, {
+                                opacity: 1
                             });
+                            if (i>0) {
+                                label[i+1].attr({
+                                    opacity: 0
+                                });
+                            }
                         }
                         animator.handleCustom(dots[fun_index][index], {
                             event_duration: 400,
@@ -1591,12 +1612,12 @@ function drawSpider(widget) {
                             });
                         } else {
                             animator.handleCustom(parallel1, {
-                                delay: opt.event_duration                            
+                                delay: opt.event_duration
                             }, {
                                 "stroke-opacity": 1
                             });
                             animator.handleCustom(parallel2, {
-                                delay: opt.event_duration                            
+                                delay: opt.event_duration
                             }, {
                                 "stroke-opacity": 1
                             });
@@ -1624,12 +1645,12 @@ function drawSpider(widget) {
                         if (spider == null) {
                             animator.pushToTimelineUndelayed(dots[fun_aux][j], {
                                 "stroke-width" : function_dot_width*1.2
-                            });                                                 
+                            });
                         } else {
                             animator.handle(dots[fun_aux][j], {
                                 "stroke-width" : function_dot_width*1.2
-                            });                             
-                        }                        
+                            });
+                        }
                     }
                 }
             }
