@@ -34,8 +34,8 @@
                     spider4.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
                                          [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
                     spider3.updateValue([getRandomInt(0,8),getRandomInt(0,8),getRandomInt(0,8)]);
-                    spider8.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
-                                        [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]])
+                    spider8.updateValue([[getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)],
+                                        [getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)]])
                     spider41.updateValue([getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]);
                 }
 
@@ -201,12 +201,14 @@
                 spider1 = new Widget({
                     type: "spider",
                     id_holder: "holder3",
-                    width: 550,
-                    height: 300,
+                    width: 650,
+                    height: 400,
                     labels: spider_labels,
                     value: spider_values,
                     max_value: 5,
                     value_text: "impago",
+                    function_line_width: 8,
+                    function_dot_width: 5,                    
                     function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
                     no_fill: true
                 });
@@ -229,8 +231,8 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "cacharro",
-                    function_line_width: 9,
-                    function_dot_width: 7,
+                    function_line_width: 8,
+                    function_dot_width: 5,
                     function_line_colors:["#FDD12A","#F00402"],
                     no_fill: true
                 });                
@@ -248,7 +250,9 @@
                     labels: spider_labels,
                     value: spider_values,
                     max_value: 8,
-                    value_text: "novia"
+                    value_text: "novia",
+                    function_line_width: 14,
+                    function_dot_width: 10                
                 });                  
                 
 
@@ -276,7 +280,7 @@
                     value_text: "impago",
                     function_line_width: 9,                    
                     function_line_colors:["#91FF22","#2190FF","#FF2190"],
-                    function_dot_width: 10,
+                    function_dot_width: 5,
                     no_fill: true
                 });  
 

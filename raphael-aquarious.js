@@ -1257,9 +1257,9 @@ function drawSpider(widget) {
     popup_opacity = opt.popup_opacity != null
     ? opt.popup_opacity : .7,
     leave_timer, is_label_visible = false,
-    label = paper.set(),
+    label,
+    frame,
     label_heights = [];
-    // Metemos en una variable los labels ocultos para calcular tamanios en el posicionamiento del popup y sus label
     for (i=0;i<labels.length;i++) {
         text_svg = paper.text(0,0,labels[i]).attr(Aquarious.txt).attr({
             "font-weight": "bold"
@@ -1267,22 +1267,29 @@ function drawSpider(widget) {
         label_heights[i] = text_svg.getBBox().height;
         text_svg.remove();
     }
-    label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
-    y=30;
-    for (i=0;i<values.length;i++) {
-        label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
-            fill: color[0],
-            "font-weight": "bold"
-        }));
-        y+=label_heights[i];
+    if (spider == null) {
+        label = paper.set();
+        // Metemos en una variable los labels ocultos para calcular tamanios en el posicionamiento del popup y sus label
+        label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
+        y=30;
+        for (i=0;i<values.length;i++) {
+            label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
+                fill: color[0],
+                "font-weight": "bold"
+            }));
+            y+=label_heights[i];
+        }
+        label.hide();
+        frame = paper.popup(100, 100, label, "right").attr({
+            fill: popup_background,
+            stroke: "#666",
+            "stroke-width": 2,
+            "fill-opacity": popup_opacity
+        }).hide();
+    } else {
+        label = spider.label;
+        frame = spider.frame;
     }
-    label.hide();
-    var frame = paper.popup(100, 100, label, "right").attr({
-        fill: popup_background,
-        stroke: "#666",
-        "stroke-width": 2,
-        "fill-opacity": popup_opacity
-    }).hide();
     // UI labels
     switch (Aquarious.lang_ui) {
         case "ES":
@@ -1318,13 +1325,13 @@ function drawSpider(widget) {
     }
 
     // Draw the function lines
-    for (fun=0;fun<shape_points_array.length;fun++){        
+    for (fun=0;fun<shape_points_array.length;fun++){
         shape_points = "M";
         if (spider == null) {
             dots[fun] = [];
             over_areas[fun] = [];
         }
-        for (i=0;i<shape_points_array[fun].length;i++) {            
+        for (i=0;i<shape_points_array[fun].length;i++) {
             coord_x = shape_points_array[fun][i].x;
             coord_y = shape_points_array[fun][i].y;
             shape_points+=coord_x+","+coord_y+" L";
@@ -1435,6 +1442,8 @@ function drawSpider(widget) {
                         }
                         is_label_visible = true;
                         is_label_visible = true;
+                        ppp.remove();
+                        ppp = null;
                     });
                     over_areas[fun_index][i].mouseout(function() {
                         for (var i=1;i<values.length;i++) {
@@ -1639,6 +1648,8 @@ function drawSpider(widget) {
 
     //spider = paper.set().push(shape,over_areas,dots,polygons);
     spider = new Object();
+    spider.label = label;
+    spider.frame = frame;
     spider.polygons = polygons;
     spider.dots = dots;
     spider.over_areas = over_areas;
