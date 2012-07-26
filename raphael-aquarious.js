@@ -1370,7 +1370,7 @@ function drawSpider(widget) {
                 .attr({
                     stroke: "none",
                     fill: color[fun],
-                    "fill-opacity": 0
+                    "fill-opacity": 0.2
                 });
             } else {
                 animator.pushToTimelineUndelayed(over_areas[fun][i], {
@@ -1415,6 +1415,7 @@ function drawSpider(widget) {
                                 shape_points_array[fun][index].y == shape_points_array[fun_index][index].y;
 
                                 if (share_dot) {
+                                    
                                     ly += label_heights[index];
                                     animator.handleCustom(dots[fun_index][index], {
                                         event_duration: 200,
