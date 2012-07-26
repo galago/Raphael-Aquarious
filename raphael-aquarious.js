@@ -79,9 +79,9 @@ function formatCurrency(num,theCurrency,theThousands,theDecimal,includeTrailingC
 
 
 /**
- * Added function to Raphael elements which returns the coordinates of every point 
+ * Added function to Raphael elements which returns the coordinates of every point
  * from the given shape
- * 
+ *
  * @warning Only tested with path element, supposely it works with the rest of them
  *
  * @return an object with pairs {x,y} with the coordinates of every point of the element
@@ -115,15 +115,15 @@ Raphael.el.getCornersArray = function () {
 };
 
 /**
- * Added function to Raphael paper which draws an horizontal line or one with 
- * a given angle in relation with the origin 
+ * Added function to Raphael paper which draws an horizontal line or one with
+ * a given angle in relation with the origin
  *
  * @param cx origin in x axis
  * @param cy origin in y axis
  * @param length the length in pixels of the output line
  * @param angle (optional) angle in degrees in relation with x axis
  * @return the output line
- * 
+ *
  * @author Hal9000
  */
 Raphael.fn.simpleLine = function (cx, cy, length, angle) {
@@ -148,10 +148,10 @@ function Popup() {
 }
 
 /**
- * This class objects work as an animation abstraction which helps using default timers, 
- * a timeline function and the possibility to turn animations on/off easy and 
+ * This class objects work as an animation abstraction which helps using default timers,
+ * a timeline function and the possibility to turn animations on/off easy and
  * conveniently, releasing this job from the widgets
- * 
+ *
  * @author Hal9000
  */
 function AnimationAbstraction(options) {
@@ -166,12 +166,14 @@ function AnimationAbstraction(options) {
     this.current_delay = this.delay;
     this.current_easing = this.easing;
 
-    /** 
+    /**
      * Handler of the animations with the abstractor settings
-     * 
+     *
      * @param elem the element to animate
      * @oaram attributes the animation attributes. see Raphael Element.attr http://raphaeljs.com/reference.html#Element.attr
      * @param callback (optional) callback function. Will be called at the end of animation
+     * 
+     * @return the animation object
      */
     this.handle = function(elem, attributes, callback) {
         var animation = null;
@@ -187,9 +189,9 @@ function AnimationAbstraction(options) {
         return animation;
     }
 
-    /** 
+    /**
      * Handler of the animations with custom settings
-     * 
+     *
      * @param elem the element to animate
      * @param options the animation options object (delay, event_duration and/or easing)
      * @oaram attributes the animation attributes object. see Raphael Element.attr http://raphaeljs.com/reference.html#Element.attr
@@ -238,37 +240,37 @@ function AnimationAbstraction(options) {
 
     }
 
-    /** 
+    /**
      * Sets the delay time for the next animation
-     * 
+     *
      * @param value the delay in milliseconds
      */
     this.nextDelay = function(value) {
         if (value < 0) value = 0;
         this.current_delay = value;
     }
-    /** 
+    /**
      * Sets the event duration time for the next animation
-     * 
+     *
      * @param value the lapse in milliseconds
-     */    
+     */
     this.nextEventDuration = function(value) {
         if (value < 0) value = 0;
         this.current_event_duration = value;
     }
-    /** 
+    /**
      * Sets the easing effect for the next animation
-     * 
+     *
      * @param value the easing formula. see http://raphaeljs.com/reference.html#Raphael.easing_formulas
-     */    
+     */
     this.nextEasing = function(value) {
         if (value < 0) value = 0;
         this.current_easing = value;
     }
 
-    /** 
+    /**
      * Resets the animation duration, delay and easing for the next animation
-     */   
+     */
     this.resetCurrent = function() {
         this.current_event_duration = this.event_duration;
         this.current_delay = this.delay;
@@ -295,7 +297,7 @@ function Options(options) {
     // Animation
     this.easing;
     this.delay;
-    this.duration;
+    this.event_duration;
     // Popup
     this.popup_background_color;
     this.popup_background_opacity;
@@ -305,7 +307,7 @@ function Options(options) {
     this.has_animation;
 
     /**
-     * toString function overload
+     * string representation of the class instance
      */
     this.toString = function() {
         var string = "Options\n";
@@ -330,8 +332,8 @@ function Options(options) {
         " value: " + this.type;
 
     }
-    
-    /** 
+
+    /**
      * The constructor of the class
      */
     this.constructor = function() {
@@ -373,6 +375,9 @@ function Options(options) {
                 this.has_caption = options.has_caption != null ? options.has_caption : true;
                 this.label = options.label != null ? options.label : "";
                 break;
+            case "thermometer":
+                this.levels = options.levels != null ? options.levels : 32;
+                break;
             case "spider":
                 if (options.labels != null && options.value != null && options.max_value != null ) {
                     this.labels = options.labels;
@@ -400,10 +405,14 @@ function Options(options) {
 }
 
 /**
- * This class objects are the widgets themselves, holding options, paper and all the 
- * elements that compose the widget.
- * 
- * @param options the options object which the widget will have
+ * This class objects are the widgets themselves, holding options, paper and all the
+ * elements that compose the widget. Every widget adjusts itself to the size of the paper.
+ * Check Options class for default options of widgets
+ *
+ * @param options the options object which the widget will have. Type and id_holder 
+ *                must be set
+ *                
+ * @author Hal9000
  */
 function Widget(options) {
     this.options;
@@ -412,7 +421,7 @@ function Widget(options) {
     this.svg;
 
     /**
-     * Factory method to build the specific widget depending in the type given 
+     * Factory method to build the specific widget depending in the type given
      * by the options object.
      */
     this.factory = function() {
@@ -424,12 +433,15 @@ function Widget(options) {
             case "gauge":
                 return drawGauge(this);
                 break;
+            case "thermometer":
+                return drawThermometer(this);
+                break;
             case "spider":
                 return drawSpider(this);
                 break;
         }
     }
-    
+
     /**
      * Updates the value of the widget asynchronously
      *
@@ -440,16 +452,23 @@ function Widget(options) {
         this.factory();
         return this;
     }
-    
+
     /**
      * Updates the options of the widget asynchronously
      *
      * @param options the new options object the widget will get
-     */    
+     */
     this.update = function(options) {
         if (options != null) this.options = new Options(options);
         this.svg = this.factory(this.options);
         return this;
+    }
+    
+    /**
+     * String representation of the widget
+     */
+    this.toString = function() {
+        return "Raphael Aquarious Widget\n\n"+this.options.toString();
     }
 
     /**
@@ -458,12 +477,12 @@ function Widget(options) {
     this.constructor = function () {
         this.options = new Options(options);
         this.paper = Raphael(this.options.id_holder, this.options.width, this.options.height);
-        this.popup = (this.options.has_popup) ? new Popup(this.options) : null;
+        //this.popup = (this.options.has_popup) ? new Popup(this.options) : null;
         this.factory(options);
     }
-    
-    
-    
+
+
+
     /* call constructor and returns instance */
     this.constructor();
     return this;
@@ -472,8 +491,27 @@ function Widget(options) {
 
 
 /**
- *  options.color
- *  options.char_size
+ *  Draw a counter in the widget paper.
+ *  
+ *  
+ *  Options available:
+ *  
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have) | number or string
+ *      - has_animation
+ *      - delay
+ *      - event_duration
+ *      - easing
+ *      
+ *      Custom:      
+ *      - color     | The color string #000000 of the counter
+ *      - char_size | The size of the font in pixels, if it doesn't fit, the 
+ *                    counter will make it smaller to avoid clipping
+ *                    
+ *  @return the widget object   
+ *  @author Hal9000
  */
 function drawCounter(widget) {
     var counter = widget.svg,
@@ -488,7 +526,8 @@ function drawCounter(widget) {
     fixed_size = opt.char_size != null,
     char_size = fixed_size ? opt.char_size : Math.round(width*2/value_length),
     font = char_size + "px " + Aquarious.font_family,
-    output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
+    output_value = value;
+    //output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
 
     // Create or update
     if (counter == null) {
@@ -500,15 +539,15 @@ function drawCounter(widget) {
         });
     } else {
         if (opt.has_animation) {
-            var duration = opt.interval > 0 ? opt.interval : 300;
+            var event_duration = opt.event_duration > 0 ? opt.event_duration : 300;
             counter.animate(Raphael.animation({
                 opacity: 0
-            }, duration, opt.easing, function() {
+            }, event_duration, opt.easing, function() {
                 counter.attr({
                     text: output_value
                 }).animate(Raphael.animation({
                     opacity: 1
-                }, duration, opt.easing));
+                }, event_duration, opt.easing));
             }).delay(opt.delay));
 
 
@@ -519,7 +558,7 @@ function drawCounter(widget) {
         }
     }
 
-    // Reescalamos si la fuente es demasiado grande para la caja hasta que quepa en ella sin clipping
+    // Rescale if the font is too big for the box until it fits without clipping
     // Da problemas de rendimiento"font-weight": 5,
     if (!fixed_size) {
         do {
@@ -536,15 +575,30 @@ function drawCounter(widget) {
 }
 
 
-
 /**
- *  options.color
- *  options.no_caption
- *  options.easing
- *  options.delay
- *  options.interval
- *  options.label
- **/
+ *  Draw a gauge meter in the widget paper.
+ *  
+ *  
+ *  Options available:
+ *  
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have)
+ *      - has_animation
+ *      - delay
+ *      - event_duration
+ *      - easing
+ *      
+ *      Custom:      
+ *      - color       | The color string #000000 of the counter 
+ *      - label       | The label tag, if any, appended to the caption
+ *      - has_caption | if set to false, a numeric caption will be shown at the 
+ *                      bottom of the gauge
+ *      
+ *  @return the widget object
+ *  @author Hal9000
+ */
 function drawGauge(widget) {
 
     var gauge = widget.svg,
@@ -641,7 +695,7 @@ function drawGauge(widget) {
         });
     };
 
-    gauge = paper.set().push(background, foreground)
+    gauge = paper.set().push(background, foreground);
     if (has_caption) gauge.push(caption);
     widget.svg = gauge;
     return widget;
@@ -650,68 +704,93 @@ function drawGauge(widget) {
 
 
 
-
 /**
- * Crea una barra horizontal formada por n niveles que representa un valor dentro
- * del rango por medio de un código de colores.
- * 
- * TODO async update
- *
- * @param paper el canvas Raphael donde se dibujará la barra
- * @param levels int el número total de niveles que tendrá la barra
- * @param value int el valor dentro del rango 0 levels-1
- * @param total_width int la anchura en píxeles de la barra
- * @return bar el objeto con la barra y sus componentes internos
- * @author Hal9000
+ *  Draw an horizontal bar formed by 'n' levels which represent each a value in 
+ *  between the range of a color code. 
+ *  red is 0, 
+ *  green is max_value-1
+ *  
+ *  
+ *  Options available:
+ *  
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have)
+ *      - has_animation
+ *      - delay
+ *      - event_duration
+ *      - easing
+ *      
+ *      Custom:      
+ *      - levels      | The number of color gap levels 
+ *      
+ *  @return the widget object  
+ *  @author Hal9000
  */
-function createBar(paper, levels, value, total_width) {
-    var i, x = 5, y = 35,
+function drawThermometer(widget) {
+
+    var thermometer = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    value = opt.value;
+    if (opt.event_duration==0) opt.event_duration = 2500;
+
+    var animator = new AnimationAbstraction(opt),
+    levels = opt.levels,
+    i, x = 5, y = 35,
     final_pos,
-    rect_width = ((total_width-5)/levels) - 4,
-    rect_height = 40,
+    last_value,
+    // Check width
+    rect_width = ((width-5)/levels) - 4,
+    rect_height = height - 40,
     rect_corner_radius = 5,
     gap = 4 + rect_width,
     stroke_width = 2,
     h=0, s= 100, b=50,
     h_inc = 120/levels,
     pointer_color = "#333",
-    bar = [],
+    level_rectangles,
     pointer_path,
-    pointer,
-    anim;
+    pointer;
 
-    // Dibuja la barra con tantos rectángulos como levels
-    for (i=0;i<levels;i++) {
-        bar[i] = paper.rect(x, y, rect_width, rect_height, rect_corner_radius)
-        .attr({
-            "stroke-width": stroke_width,
-            fill: Raphael.hsl(h, s, b)
+    // Draw the thermometer with as many rectangles as levels and the pointer shape
+    if (thermometer == null) {
+        last_value = 0;
+        level_rectangles = [];
+        for (i=0;i<levels;i++) {
+            level_rectangles[i] = paper.rect(x, y, rect_width, rect_height, rect_corner_radius)
+            .attr({
+                "stroke-width": stroke_width,
+                fill: Raphael.hsl(h, s, b)
+            });
+            x+=gap;
+            h+=h_inc;
+        //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
+        }
+        pointer_path = "M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z";
+        pointer = paper.path(pointer_path).attr({
+            fill: pointer_color,
+            stroke: "none",
+            transform: "T"+(-11+(rect_width/2))+"0,10S1.8"
         });
-        x+=gap;
-        h+=h_inc;
-    //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
+    } else {        
+        pointer = thermometer.pop();    
+        last_value = widget.last_value;
     }
-
-    // Dibuja el puntero triangular y lo posiciona en value
-    final_pos = value*gap;
-    pointer_path = "M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z";
-    pointer = paper.path(pointer_path).attr({
-        fill: pointer_color,
-        stroke: "none",
-        transform: "T"+(-11+(rect_width/2))+"0,10S1.8"
+        
+    final_pos = (value-last_value)*gap;
+    animator.handle(pointer,{
+        transform: ["...T", final_pos, 0]
     });
 
-    anim = Raphael.animation({
-        transform: ["...T", final_pos, 0]
-    }, 2500, "<>");
-    pointer.animate(anim);
-    for (i=0;i<levels;i++) {
-        bar[i].animateWith(pointer,anim,{})
-    }
-
-    bar.pointer = pointer;
-    paper.renderfix();
-    return bar;
+    paper.renderfix();    
+    thermometer = paper.set().push(pointer);
+    widget.svg = thermometer;
+    widget.last_value = value;
+    return widget;
 }
 
 // TODO
@@ -739,33 +818,44 @@ function createBarChart (paper, width, height, chart_type, values, options) {
 
 
 
+
 /**
- * Crea una gráfica de dos ejes x,y. El eje x acetpa valores continuos pero no así el eje y
- * 
- * TODO async update
- *
- * @param paper Paper el canvas Raphael donde se dibujará la barra
- * @param width int la anchura en píxeles de la gráfica
- * @param height int la altura en píxeles de la gráfica
- * @param values (polimorfico) array con pares {x,y} que representan los valores en la grágica
+ *  Draw a 2 axis graph. X axis accept continous values, but not Y axis.
+ *  
+ *  TODO async update 
+ *  
+ *  Options available:
+ *  
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have) | monofunction - array with pairs {x,y} which represent 
+ *                                           the values of the graph function.
  *                              OR
- *                             array de arrays con pares {x,y} para dibujar multiples funciones en el mismo eje
- * @param options object (opcional){
- *            value_text String el texto que saldrá en el popup relacionado con los valores
- *            economy boolean si es {@code true} creará la gráfica para valores de moneda
- *                    con saltos proporcionales de 500,1000,5000,10000... como techo del eje x
- *            economy_max int el valor maximo antes de pasar a saltos proporcionales como techo del eje x
- *            no_fill boolean si es {@code true} NO pintara un relleno semitransparente bajo la linea del valor al origen
- *            function_line_colors (si se usan varias funciones es obligatorio) array de Strings con los colores de cada linea en #rgbhex
- *            function_line_width number el grosor de las lineas de funcion
- *            function_dot_width numberel grosor de los puntos de funcion
- *            popup_background String el color del fondo del popup en #rgbhex
- *            popup_opacity float la transparencia del fondo del popup
- *            interval int numero de milisegundos entre cada nuevo trazo
- *            delay int numero de milisegundos que tarda la animacion en comenzar
- *
- * @return graph el objeto con la gráfica y sus componentes internos
- * @author Hal9000
+ *                            multifunction - array of arrays which represent multiple 
+ *                                            graph functions, each one composed of pairs {x,y}.
+ *      - has_animation
+ *      - delay
+ *      - event_duration    | milliseconds between each pair {x,y} is drawn
+ *      - easing
+ *      
+ *      
+ *      Custom:      
+ *      - financial_mode       | if true the graph will be formatted with monetary format
+ *                               in proportional hops (500,1000,5000,10000...) as ceiling of X axis.
+ *                               default false
+ *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function graph, default false.
+ *      - function_line_colors | (must have if multifunction) array of strings with the color code of every graph function line
+ *      - function_line_width  | The width in pixels of the graph function line(s)
+ *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
+ *      - popup_background     | The color code of the popup background 
+ *      - popup_opacity        | The opacity 0-1 of the popup background
+ *      
+ *  @return the widget object
+ *          
+ *  @author Hal9000
  */
 function create2AxisGraph (paper, width, height, values, options) {
     var i, x, y, y_value, aux_value,
@@ -781,11 +871,11 @@ function create2AxisGraph (paper, width, height, values, options) {
     multifun = values[0] instanceof Array,
     fun,
     fun_aux,
-    economy = options != null && options.economy != null && options.economy
+    financial_mode = options != null && options.financial_mode != null && options.financial_mode
     ? true : false,
     economy_min = 500,
-    economy_max = options != null && options.economy_max != null
-    ? options.economy_max : -1,
+    financial_max = options != null && options.financial_max != null
+    ? options.financial_max : -1,
     max_x = 0,
     max_y = 0,
     min_y = 0,
@@ -868,11 +958,11 @@ function create2AxisGraph (paper, width, height, values, options) {
     /* Si la gráfica es de valores monetarios los márgenes máximos
      * estarán predefinidos para tener un look&feel consistente.
      */
-    if (economy) {
+    if (financial_mode) {
         gaps_y = 5;
         if (max_y > 0) base = Math.floor(Math.log(max_y)/Math.log(10));
         ceiling = (max_y < economy_min) ? economy_min : Math.pow(10,base)*5;
-        if (economy_max > -1 && ceiling >= economy_max) {
+        if (financial_max > -1 && ceiling >= financial_max) {
             ceiling = Math.pow(10,base);
             while (max_y >= ceiling) ceiling+=Math.pow(10,base);
         //while (max_y >= ceiling) ceiling+=Math.pow(10,base-1)*5;
@@ -1083,7 +1173,7 @@ function create2AxisGraph (paper, width, height, values, options) {
                         fill: "#fff"
                     },200, '>');
                     clearTimeout(leave_timer);
-                    if (economy)
+                    if (financial_mode)
                         label[0].attr({
                             text: formatCurrency(values[fun_index][index].y,Aquarious.currency,Aquarious.thousands,Aquarious.decimal,false)
                         });
@@ -1215,27 +1305,41 @@ function create2AxisGraph (paper, width, height, values, options) {
     return graph;
 }
 
+
 /**
- * Dibuja la araña en función al número de valores y al número de niveles posibles.
- * A continuación dibuja la función del gráfico.
- *
- * @param paper the Raphael paper holder
- * @param labels String[] La forma geométrica tendrá tantos lados como el numero de etiquetas
- * @param values int[] El rango de {@code 0} a {@code values} de valores posibles que cada nivel podrá tener
- * @param max_value int El valor máximo de la función, si algún valor del array lo supera se redondeará a este
- * @param options object (opcional){
- *            value_text String el texto que saldrá en el popup relacionado con los valores
- *            growing_interval int la distancia en píxeles de un valor a otro
- *            function_line_colors (si se usan varias funciones es obligatorio) array de Strings con los colores de cada linea en #rgbhex
- *            function_line_width number el grosor de las lineas de funcion
- *            function_dot_width numberel grosor de los puntos de funcion
- *            popup_background String el color del fondo del popup en #rgbhex
- *            popup_opacity float la transparencia del fondo del popup
- *            delay int numero de milisegundos que tarda la animacion en comenzar
- *            ms_interval int numero de milisegundos entre cada nuevo trazo
- *
- * @return spider an object with the spider and it's components
- * @author Hal9000
+ *  Draw a spider graph based in the number of values and the number of possible levels.
+ *  
+ *  Options available:
+ *  
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have) | monofunction - array with numbers which represent 
+ *                                           the values of the graph function in 
+ *                                           clockwise orther, starting at "12hours".
+ *                              OR
+ *                            multifunction - array of arrays which represent multiple 
+ *                                            graph functions, each one composed of different values.
+ *      - has_animation
+ *      - delay
+ *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
+ *      - easing
+ *      
+ *      
+ *      Custom:      
+ *      - labels    (must have)| an array of strings with the labels of each axis. The graph will have as many axis as strings in this array
+ *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the graph
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function graph, default false.
+ *      - function_line_colors | (must have if multifunction) array of strings with the color code of every graph function line
+ *      - function_line_width  | The width in pixels of the graph function line(s)
+ *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
+ *      - popup_background     | The color code of the popup background 
+ *      - popup_opacity        | The opacity 0-1 of the popup background
+ *      
+ *  @return the widget object
+ *          
+ *  @author Hal9000
  */
 function drawSpider(widget) {
     var spider = widget.svg,
@@ -1468,7 +1572,7 @@ function drawSpider(widget) {
             }
 
             if (spider == null) {
-                function over_events (x, y, index, fun_index) { 
+                function over_events (x, y, index, fun_index) {
                     over_areas[fun_index][i].mouseover(function() {
                         var lx, ly, share_dot;
                         animator.handleCustom(dots[fun_index][index], {
@@ -1503,7 +1607,7 @@ function drawSpider(widget) {
                                 shape_points_array[fun][index].y == shape_points_array[fun_index][index].y;
 
                                 if (share_dot) {
-                                    
+
                                     ly += label_heights[index];
                                     animator.handleCustom(dots[fun_index][index], {
                                         event_duration: 200,
