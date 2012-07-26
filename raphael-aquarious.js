@@ -1,5 +1,5 @@
 /*!
- * Raphael Aquarious 0.3 - JavaScript Graph Library
+ * Raphael Aquarious 0.4 - JavaScript Graph Library
  *
  * This is the age of Aquarious
  * http://www.youtube.com/watch?v=huBEyCVKdcw&feature=related
@@ -79,12 +79,13 @@ function formatCurrency(num,theCurrency,theThousands,theDecimal,includeTrailingC
 
 
 /**
- * Función agregada para los elementos de Raphael que devuelve las
- * coordenadas de cada punto de la forma
- * @warning Solo se ha probado en el elemento path pero se supone que funciona con los demás.
+ * Added function to Raphael elements which returns the coordinates of every point 
+ * from the given shape
+ * 
+ * @warning Only tested with path element, supposely it works with the rest of them
  *
- * @return devuelve un objeto de pares {x,y} con las coordenadas de cada punto.
- * @author Al
+ * @return an object with pairs {x,y} with the coordinates of every point of the element
+ * @author Hal9000
  */
 Raphael.el.getCornersArray = function () {
     var i, point, segment, corners_array;
@@ -114,15 +115,16 @@ Raphael.el.getCornersArray = function () {
 };
 
 /**
- * Función agregada para Raphael paper que dibuja una linea horizontal o
- * con un angulo determinado respecto al origen
+ * Added function to Raphael paper which draws an horizontal line or one with 
+ * a given angle in relation with the origin 
  *
- * @param cx origen x
- * @param cy origen y
- * @param length la longitud en pixeles de la linea
- * @param angle (opcional) angulo en grados con respecto al eje x
- * @return devuelve la linea
- * @author Al
+ * @param cx origin in x axis
+ * @param cy origin in y axis
+ * @param length the length in pixels of the output line
+ * @param angle (optional) angle in degrees in relation with x axis
+ * @return the output line
+ * 
+ * @author Hal9000
  */
 Raphael.fn.simpleLine = function (cx, cy, length, angle) {
     var line, bbox;
@@ -145,7 +147,13 @@ function Popup() {
 
 }
 
-
+/**
+ * This class objects work as an animation abstraction which helps using default timers, 
+ * a timeline function and the possibility to turn animations on/off easy and 
+ * conveniently, releasing this job from the widgets
+ * 
+ * @author Hal9000
+ */
 function AnimationAbstraction(options) {
     this.has_animation = options.has_animation;
     this.event_duration = options.event_duration;
@@ -158,6 +166,13 @@ function AnimationAbstraction(options) {
     this.current_delay = this.delay;
     this.current_easing = this.easing;
 
+    /** 
+     * Handler of the animations with the abstractor settings
+     * 
+     * @param elem the element to animate
+     * @oaram attributes the animation attributes. see Raphael Element.attr http://raphaeljs.com/reference.html#Element.attr
+     * @param callback (optional) callback function. Will be called at the end of animation
+     */
     this.handle = function(elem, attributes, callback) {
         var animation = null;
         if (this.has_animation) {
@@ -172,6 +187,14 @@ function AnimationAbstraction(options) {
         return animation;
     }
 
+    /** 
+     * Handler of the animations with custom settings
+     * 
+     * @param elem the element to animate
+     * @param options the animation options object (delay, event_duration and/or easing)
+     * @oaram attributes the animation attributes object. see Raphael Element.attr http://raphaeljs.com/reference.html#Element.attr
+     * @param callback (optional) callback function. Will be called at the end of animation
+     */
     this.handleCustom = function(elem, options, attributes, callback) {
         if (options.delay != null) this.nextDelay(options.delay);
         if (options.event_duration != null) this.nextEventDuration(options.event_duration);
@@ -210,23 +233,42 @@ function AnimationAbstraction(options) {
         return this.handle(elem, attributes, callback);
     }
 
+    // TODO
     this.syncAnimation = function(elem, options, attributes, callback) {
 
     }
 
+    /** 
+     * Sets the delay time for the next animation
+     * 
+     * @param value the delay in milliseconds
+     */
     this.nextDelay = function(value) {
         if (value < 0) value = 0;
         this.current_delay = value;
     }
+    /** 
+     * Sets the event duration time for the next animation
+     * 
+     * @param value the lapse in milliseconds
+     */    
     this.nextEventDuration = function(value) {
         if (value < 0) value = 0;
         this.current_event_duration = value;
     }
+    /** 
+     * Sets the easing effect for the next animation
+     * 
+     * @param value the easing formula. see http://raphaeljs.com/reference.html#Raphael.easing_formulas
+     */    
     this.nextEasing = function(value) {
         if (value < 0) value = 0;
         this.current_easing = value;
     }
 
+    /** 
+     * Resets the animation duration, delay and easing for the next animation
+     */   
     this.resetCurrent = function() {
         this.current_event_duration = this.event_duration;
         this.current_delay = this.delay;
@@ -234,6 +276,11 @@ function AnimationAbstraction(options) {
     }
 }
 
+
+/**
+ * This class objects hold the settings of a widget. Some of this options are common
+ * between widgets, others are specific of some.
+ */
 function Options(options) {
     this.type;
     this.id_holder;
@@ -257,6 +304,9 @@ function Options(options) {
     this.has_popup;
     this.has_animation;
 
+    /**
+     * toString function overload
+     */
     this.toString = function() {
         var string = "Options\n";
         for (var i=0;i<this.length;i++) {
@@ -280,6 +330,10 @@ function Options(options) {
         " value: " + this.type;
 
     }
+    
+    /** 
+     * The constructor of the class
+     */
     this.constructor = function() {
         /* Common Options */
         if (options == null) throw "RaphaelAquarious: missing arguments";
@@ -338,17 +392,29 @@ function Options(options) {
         }
     }
 
-    /* Constructor */
+
+
+    /* call constructor and returns instance */
     this.constructor();
     return this;
 }
 
+/**
+ * This class objects are the widgets themselves, holding options, paper and all the 
+ * elements that compose the widget.
+ * 
+ * @param options the options object which the widget will have
+ */
 function Widget(options) {
     this.options;
     this.paper;
     this.popup;
     this.svg;
 
+    /**
+     * Factory method to build the specific widget depending in the type given 
+     * by the options object.
+     */
     this.factory = function() {
 
         switch (this.options.type) {
@@ -363,24 +429,42 @@ function Widget(options) {
                 break;
         }
     }
+    
+    /**
+     * Updates the value of the widget asynchronously
+     *
+     * @param new_value the new_value the widget will have, this is a polymorphic variable
+     */
     this.updateValue = function(new_value) {
         this.options.value = new_value;
         this.factory();
         return this;
     }
+    
+    /**
+     * Updates the options of the widget asynchronously
+     *
+     * @param options the new options object the widget will get
+     */    
     this.update = function(options) {
         if (options != null) this.options = new Options(options);
         this.svg = this.factory(this.options);
         return this;
     }
 
+    /**
+     * Constructor of the class
+     */
     this.constructor = function () {
         this.options = new Options(options);
         this.paper = Raphael(this.options.id_holder, this.options.width, this.options.height);
         this.popup = (this.options.has_popup) ? new Popup(this.options) : null;
         this.factory(options);
     }
-    /* Constructor */
+    
+    
+    
+    /* call constructor and returns instance */
     this.constructor();
     return this;
 }
@@ -570,13 +654,15 @@ function drawGauge(widget) {
 /**
  * Crea una barra horizontal formada por n niveles que representa un valor dentro
  * del rango por medio de un código de colores.
+ * 
+ * TODO async update
  *
  * @param paper el canvas Raphael donde se dibujará la barra
  * @param levels int el número total de niveles que tendrá la barra
  * @param value int el valor dentro del rango 0 levels-1
  * @param total_width int la anchura en píxeles de la barra
  * @return bar el objeto con la barra y sus componentes internos
- * @author Al
+ * @author Hal9000
  */
 function createBar(paper, levels, value, total_width) {
     var i, x = 5, y = 35,
@@ -628,7 +714,7 @@ function createBar(paper, levels, value, total_width) {
     return bar;
 }
 
-
+// TODO
 function createBarChart (paper, width, height, chart_type, values, options) {
     var graph_width,
     graph_height,
@@ -655,6 +741,8 @@ function createBarChart (paper, width, height, chart_type, values, options) {
 
 /**
  * Crea una gráfica de dos ejes x,y. El eje x acetpa valores continuos pero no así el eje y
+ * 
+ * TODO async update
  *
  * @param paper Paper el canvas Raphael donde se dibujará la barra
  * @param width int la anchura en píxeles de la gráfica
@@ -677,7 +765,7 @@ function createBarChart (paper, width, height, chart_type, values, options) {
  *            delay int numero de milisegundos que tarda la animacion en comenzar
  *
  * @return graph el objeto con la gráfica y sus componentes internos
- * @author Al
+ * @author Hal9000
  */
 function create2AxisGraph (paper, width, height, values, options) {
     var i, x, y, y_value, aux_value,
@@ -1147,7 +1235,7 @@ function create2AxisGraph (paper, width, height, values, options) {
  *            ms_interval int numero de milisegundos entre cada nuevo trazo
  *
  * @return spider an object with the spider and it's components
- * @author Al
+ * @author Hal9000
  */
 function drawSpider(widget) {
     var spider = widget.svg,
@@ -1370,7 +1458,7 @@ function drawSpider(widget) {
                 .attr({
                     stroke: "none",
                     fill: color[fun],
-                    "fill-opacity": 0.2
+                    "fill-opacity": 0
                 });
             } else {
                 animator.pushToTimelineUndelayed(over_areas[fun][i], {
