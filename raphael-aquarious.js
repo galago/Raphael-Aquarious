@@ -172,7 +172,7 @@ function AnimationAbstraction(options) {
      * @param elem the element to animate
      * @oaram attributes the animation attributes. see Raphael Element.attr http://raphaeljs.com/reference.html#Element.attr
      * @param callback (optional) callback function. Will be called at the end of animation
-     * 
+     *
      * @return the animation object
      */
     this.handle = function(elem, attributes, callback) {
@@ -328,8 +328,7 @@ function Options(options) {
         " popup_background_color: " + this.popup_background_color + "\n" +
         " popup_background_opacity: " + this.popup_background_opacity + "\n" +
         " has_popup: " + this.has_popup + "\n" +
-        " has_animation: " + this.has_animation + "\n" +
-        " value: " + this.type;
+        " has_animation: " + this.has_animation + "\n";
 
     }
 
@@ -378,6 +377,15 @@ function Options(options) {
             case "thermometer":
                 this.levels = options.levels != null ? options.levels : 32;
                 break;
+            case "graph":
+                this.financial_mode = options.financial_mode != null ? options.financial_mode : false;
+                this.financial_max = options.financial_max != null ? options.financial_max : -1;
+                this.value_text = options.value_text != null ? options.value_text : "";
+                this.no_fill = options.no_fill != null ? options.no_fill : false;
+                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
+                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
+                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                break;
             case "spider":
                 if (options.labels != null && options.value != null && options.max_value != null ) {
                     this.labels = options.labels;
@@ -409,9 +417,9 @@ function Options(options) {
  * elements that compose the widget. Every widget adjusts itself to the size of the paper.
  * Check Options class for default options of widgets
  *
- * @param options the options object which the widget will have. Type and id_holder 
+ * @param options the options object which the widget will have. Type and id_holder
  *                must be set
- *                
+ *
  * @author Hal9000
  */
 function Widget(options) {
@@ -435,6 +443,9 @@ function Widget(options) {
                 break;
             case "thermometer":
                 return drawThermometer(this);
+                break;
+            case "graph":
+                return drawGraph(this);
                 break;
             case "spider":
                 return drawSpider(this);
@@ -463,7 +474,7 @@ function Widget(options) {
         this.svg = this.factory(this.options);
         return this;
     }
-    
+
     /**
      * String representation of the widget
      */
@@ -492,10 +503,10 @@ function Widget(options) {
 
 /**
  *  Draw a counter in the widget paper.
- *  
- *  
+ *
+ *
  *  Options available:
- *  
+ *
  *      Default:
  *      - width
  *      - height
@@ -504,13 +515,14 @@ function Widget(options) {
  *      - delay
  *      - event_duration
  *      - easing
- *      
- *      Custom:      
+ *
+ *      Custom:
  *      - color     | The color string #000000 of the counter
- *      - char_size | The size of the font in pixels, if it doesn't fit, the 
- *                    counter will make it smaller to avoid clipping
- *                    
- *  @return the widget object   
+ *      - char_size | The size of the font in pixels, if it doesn't fit, the
+ *                    counter will make it smaller to avoid clipping.
+ *                    if not specified, the text will fit the whole paper, it's variable
+ *
+ *  @return the widget object
  *  @author Hal9000
  */
 function drawCounter(widget) {
@@ -526,7 +538,8 @@ function drawCounter(widget) {
     fixed_size = opt.char_size != null,
     char_size = fixed_size ? opt.char_size : Math.round(width*2/value_length),
     font = char_size + "px " + Aquarious.font_family,
-    output_value = value;
+    output_value = value,
+    counter_BBox;
     //output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
 
     // Create or update
@@ -557,17 +570,20 @@ function drawCounter(widget) {
             });
         }
     }
-
     // Rescale if the font is too big for the box until it fits without clipping
     // Da problemas de rendimiento"font-weight": 5,
-    if (!fixed_size) {
+    if (!fixed_size) { 
+        //console.log(char_size);var i=0;
         do {
             font = char_size + "px " + Aquarious.font_family;
             counter.attr({
                 font: font
             });
             char_size-=5;
-        } while (counter.getBBox().width > width || counter.getBBox().height > height);
+            counter_BBox = counter.getBBox();
+            i++;
+        } while (counter_BBox.width > width || counter_BBox.height > height);
+        //console.log(char_size+"\n"+i+"\n");
     }
 
     widget.svg = counter;
@@ -577,10 +593,10 @@ function drawCounter(widget) {
 
 /**
  *  Draw a gauge meter in the widget paper.
- *  
- *  
+ *
+ *
  *  Options available:
- *  
+ *
  *      Default:
  *      - width
  *      - height
@@ -589,13 +605,13 @@ function drawCounter(widget) {
  *      - delay
  *      - event_duration
  *      - easing
- *      
- *      Custom:      
- *      - color       | The color string #000000 of the counter 
+ *
+ *      Custom:
+ *      - color       | The color string #000000 of the counter
  *      - label       | The label tag, if any, appended to the caption
- *      - has_caption | if set to false, a numeric caption will be shown at the 
+ *      - has_caption | if set to false, a numeric caption will be shown at the
  *                      bottom of the gauge
- *      
+ *
  *  @return the widget object
  *  @author Hal9000
  */
@@ -705,14 +721,14 @@ function drawGauge(widget) {
 
 
 /**
- *  Draw an horizontal bar formed by 'n' levels which represent each a value in 
- *  between the range of a color code. 
- *  red is 0, 
+ *  Draw an horizontal bar formed by 'n' levels which represent each a value in
+ *  between the range of a color code.
+ *  red is 0,
  *  green is max_value-1
- *  
- *  
+ *
+ *
  *  Options available:
- *  
+ *
  *      Default:
  *      - width
  *      - height
@@ -721,11 +737,11 @@ function drawGauge(widget) {
  *      - delay
  *      - event_duration
  *      - easing
- *      
- *      Custom:      
- *      - levels      | The number of color gap levels 
- *      
- *  @return the widget object  
+ *
+ *      Custom:
+ *      - levels      | The number of color gap levels
+ *
+ *  @return the widget object
  *  @author Hal9000
  */
 function drawThermometer(widget) {
@@ -776,17 +792,17 @@ function drawThermometer(widget) {
             stroke: "none",
             transform: "T"+(-11+(rect_width/2))+"0,10S1.8"
         });
-    } else {        
-        pointer = thermometer.pop();    
+    } else {
+        pointer = thermometer.pop();
         last_value = widget.last_value;
     }
-        
+
     final_pos = (value-last_value)*gap;
     animator.handle(pointer,{
         transform: ["...T", final_pos, 0]
     });
 
-    paper.renderfix();    
+    paper.renderfix();
     thermometer = paper.set().push(pointer);
     widget.svg = thermometer;
     widget.last_value = value;
@@ -820,27 +836,27 @@ function createBarChart (paper, width, height, chart_type, values, options) {
 
 
 /**
- *  Draw a 2 axis graph. X axis accept continous values, but not Y axis.
- *  
- *  TODO async update 
- *  
+ *  Draw a x,y axis graph. X axis accept continous values, not Y axis.
+ *
+ *  TODO async update
+ *
  *  Options available:
- *  
+ *
  *      Default:
  *      - width
  *      - height
- *      - value (must have) | monofunction - array with pairs {x,y} which represent 
+ *      - value (must have) | monofunction - array with pairs {x,y} which represent
  *                                           the values of the graph function.
  *                              OR
- *                            multifunction - array of arrays which represent multiple 
+ *                            multifunction - array of arrays which represent multiple
  *                                            graph functions, each one composed of pairs {x,y}.
  *      - has_animation
  *      - delay
  *      - event_duration    | milliseconds between each pair {x,y} is drawn
  *      - easing
- *      
- *      
- *      Custom:      
+ *
+ *
+ *      Custom:
  *      - financial_mode       | if true the graph will be formatted with monetary format
  *                               in proportional hops (500,1000,5000,10000...) as ceiling of X axis.
  *                               default false
@@ -850,14 +866,27 @@ function createBarChart (paper, width, height, chart_type, values, options) {
  *      - function_line_width  | The width in pixels of the graph function line(s)
  *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
- *      - popup_background     | The color code of the popup background 
+ *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
- *      
+ *
  *  @return the widget object
- *          
+ *
  *  @author Hal9000
  */
-function create2AxisGraph (paper, width, height, values, options) {
+function drawGraph (widget) {
+    var graph1 = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    values = opt.value;
+
+    if (opt.event_duration==0) opt.event_duration = 600;
+    if (opt.delay==0) opt.delay = 100;
+    var animator = new AnimationAbstraction(opt);
+var ms_delay = opt.delay, ms_interval = opt.event_duration;
+
+
     var i, x, y, y_value, aux_value,
     x_graph,
     y_graph = 20,
@@ -871,11 +900,9 @@ function create2AxisGraph (paper, width, height, values, options) {
     multifun = values[0] instanceof Array,
     fun,
     fun_aux,
-    financial_mode = options != null && options.financial_mode != null && options.financial_mode
-    ? true : false,
-    economy_min = 500,
-    financial_max = options != null && options.financial_max != null
-    ? options.financial_max : -1,
+    financial_mode = opt.financial_mode,
+    financial_min = 500,
+    financial_max = opt.financial_max,
     max_x = 0,
     max_y = 0,
     min_y = 0,
@@ -890,16 +917,9 @@ function create2AxisGraph (paper, width, height, values, options) {
     path_string = [],
     path_string_fill,
     line_stroke_width = .2,
-    function_line_width = options != null && options.function_line_width != null
-    ? options.function_line_width : 4,
-    function_dot_width = options != null && options.function_dot_width != null
-    ? options.function_dot_width : 4,
-    color = options != null && options.function_line_colors != null
-    ? options.function_line_colors : new Array(Aquarious.color),
-    ms_delay = options != null && options.delay != null
-    ? options.delay : 0,
-    ms_interval = options != null && options.interval != null
-    ? options.interval : 600,
+    function_line_width = opt.function_line_width,
+    function_dot_width = opt.function_dot_width,
+    color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color),
     horizontal_axis_lines,
     fill,
     dots = [],
@@ -911,12 +931,9 @@ function create2AxisGraph (paper, width, height, values, options) {
     if (!multifun) values = new Array(values);
     // popup var
     var in_text,
-    value_text = options != null && options.value_text != null
-    ? " "+options.value_text : "",
-    popup_background = options != null && options.popup_background != null
-    ? options.popup_background : "#000",
-    popup_opacity = options != null && options.popup_opacity != null
-    ? options.popup_opacity : .7,
+    value_text = opt.value_text,
+    popup_background = opt.popup_background_color,
+    popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
     label = paper.set();
     label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
@@ -961,7 +978,7 @@ function create2AxisGraph (paper, width, height, values, options) {
     if (financial_mode) {
         gaps_y = 5;
         if (max_y > 0) base = Math.floor(Math.log(max_y)/Math.log(10));
-        ceiling = (max_y < economy_min) ? economy_min : Math.pow(10,base)*5;
+        ceiling = (max_y < financial_min) ? financial_min : Math.pow(10,base)*5;
         if (financial_max > -1 && ceiling >= financial_max) {
             ceiling = Math.pow(10,base);
             while (max_y >= ceiling) ceiling+=Math.pow(10,base);
@@ -1253,7 +1270,7 @@ function create2AxisGraph (paper, width, height, values, options) {
         }
 
         // Dibuja el relleno del path de la funcion al eje
-        if (!(options != null && options.no_fill != null && options.no_fill == true)) {
+        if (!(opt != null && opt.no_fill != null && opt.no_fill == true)) {
             fill = paper.path(path_string_fill+" "+x+" "+y+"z").attr({
                 stroke: "none",
                 fill: color[fun],
@@ -1308,25 +1325,25 @@ function create2AxisGraph (paper, width, height, values, options) {
 
 /**
  *  Draw a spider graph based in the number of values and the number of possible levels.
- *  
+ *
  *  Options available:
- *  
+ *
  *      Default:
  *      - width
  *      - height
- *      - value (must have) | monofunction - array with numbers which represent 
- *                                           the values of the graph function in 
+ *      - value (must have) | monofunction - array with numbers which represent
+ *                                           the values of the graph function in
  *                                           clockwise orther, starting at "12hours".
  *                              OR
- *                            multifunction - array of arrays which represent multiple 
+ *                            multifunction - array of arrays which represent multiple
  *                                            graph functions, each one composed of different values.
  *      - has_animation
  *      - delay
  *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
  *      - easing
- *      
- *      
- *      Custom:      
+ *
+ *
+ *      Custom:
  *      - labels    (must have)| an array of strings with the labels of each axis. The graph will have as many axis as strings in this array
  *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the graph
  *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function graph, default false.
@@ -1334,11 +1351,11 @@ function create2AxisGraph (paper, width, height, values, options) {
  *      - function_line_width  | The width in pixels of the graph function line(s)
  *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
- *      - popup_background     | The color code of the popup background 
+ *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
- *      
+ *
  *  @return the widget object
- *          
+ *
  *  @author Hal9000
  */
 function drawSpider(widget) {
@@ -1444,10 +1461,8 @@ function drawSpider(widget) {
     var in_text, text_svg,
     value_text = opt.value_text != null
     ? " "+opt.value_text : "",
-    popup_background = opt.popup_background != null
-    ? opt.popup_background : "#000",
-    popup_opacity = opt.popup_opacity != null
-    ? opt.popup_opacity : .7,
+    popup_background = opt.popup_background_color,
+    popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
     label,
     frame,
