@@ -49,7 +49,8 @@
                     id_holder: "holder_counter1",
                     width: 200,
                     height: 200,
-                    value: 7 + "€"
+                    value: 7 + "€",
+                    has_animation: false
                 });
                 counter2 = new Widget({
                     type: "counter",
@@ -59,7 +60,7 @@
                     value: 4,
                     char_size: 50,
                     event_duration: 1000,
-                    delay:2500,
+                    delay:2000,
                     easing: "bounce"
                 }).updateValue(3).updateValue(2).updateValue(1).updateValue("boom");
 
@@ -68,8 +69,7 @@
                     id_holder: "holder_counter3",
                     width: 600,
                     height: 300,
-                    value: 666,
-                    has_animation: true
+                    value: 666
                 });
 
 
