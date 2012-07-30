@@ -315,20 +315,20 @@ function Options(options) {
             string += this[i];
         }
         return "Common Options\n" +
-        " type: " + this.type + "\n" +
-        " id_holder: " + this.id_holder + "\n" +
-        " value: " + this.value + "\n" +
-        " width: " + this.width + "\n" +
-        " height: " + this.height + "\n" +
-        " color: " + this.color + "\n" +
-        " color_alt: " + this.color_alt + "\n" +
-        " easing: " + this.easing + "\n" +
-        " delay: " + this.delay + "\n" +
-        " event_duration: " + this.event_duration + "\n" +
-        " popup_background_color: " + this.popup_background_color + "\n" +
-        " popup_background_opacity: " + this.popup_background_opacity + "\n" +
-        " has_popup: " + this.has_popup + "\n" +
-        " has_animation: " + this.has_animation + "\n";
+            " type: " + this.type + "\n" +
+            " id_holder: " + this.id_holder + "\n" +
+            " value: " + this.value + "\n" +
+            " width: " + this.width + "\n" +
+            " height: " + this.height + "\n" +
+            " color: " + this.color + "\n" +
+            " color_alt: " + this.color_alt + "\n" +
+            " easing: " + this.easing + "\n" +
+            " delay: " + this.delay + "\n" +
+            " event_duration: " + this.event_duration + "\n" +
+            " popup_background_color: " + this.popup_background_color + "\n" +
+            " popup_background_opacity: " + this.popup_background_opacity + "\n" +
+            " has_popup: " + this.has_popup + "\n" +
+            " has_animation: " + this.has_animation + "\n";
 
     }
 
@@ -540,7 +540,18 @@ function drawCounter(widget) {
     font = char_size + "px " + Aquarious.font_family,
     output_value = value,
     counter_BBox;
-    //output_value = formatCurrency(value,'',Aquarious.thousands,Aquarious.decimal,false);
+
+    // Rescale if the font is too big for the box until it fits without clipping
+    var fix_clipping = function () {
+        if (!fixed_size) {
+            counter.transform("");
+            counter_BBox = counter.getBBox();
+            while (counter_BBox.width > width || counter_BBox.height > height) {
+                counter.transform("s0.9...");
+                counter_BBox = counter.getBBox();
+            }
+        }
+    }  
 
     // Create or update
     if (counter == null) {
@@ -550,6 +561,7 @@ function drawCounter(widget) {
             "font-weight": "bold",
             "text-anchor": "middle"
         });
+        fix_clipping();
     } else {
         if (opt.has_animation) {
             var event_duration = opt.event_duration > 0 ? opt.event_duration : 300;
@@ -561,30 +573,18 @@ function drawCounter(widget) {
                 }).animate(Raphael.animation({
                     opacity: 1
                 }, event_duration, opt.easing));
+                fix_clipping();
             }).delay(opt.delay));
-
 
         } else {
             counter.attr({
                 text: output_value
             });
+            fix_clipping();
         }
     }
-    // Rescale if the font is too big for the box until it fits without clipping
-    // Da problemas de rendimiento"font-weight": 5,
-    if (!fixed_size) { 
-        //console.log(char_size);var i=0;
-        do {
-            font = char_size + "px " + Aquarious.font_family;
-            counter.attr({
-                font: font
-            });
-            char_size-=5;
-            counter_BBox = counter.getBBox();
-            i++;
-        } while (counter_BBox.width > width || counter_BBox.height > height);
-        //console.log(char_size+"\n"+i+"\n");
-    }
+  
+
 
     widget.svg = counter;
     return widget;
@@ -784,7 +784,7 @@ function drawThermometer(widget) {
             });
             x+=gap;
             h+=h_inc;
-        //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
+            //alert(h+" "+s+" "+b+" "+Raphael.hsb(h, 100, 50));
         }
         pointer_path = "M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z";
         pointer = paper.path(pointer_path).attr({
@@ -828,7 +828,7 @@ function createBarChart (paper, width, height, chart_type, values, options) {
         bar_height = bar_thickness;
     } else return;
 
-// Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+    // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
 
 }
 
@@ -884,7 +884,7 @@ function drawGraph (widget) {
     if (opt.event_duration==0) opt.event_duration = 600;
     if (opt.delay==0) opt.delay = 100;
     var animator = new AnimationAbstraction(opt);
-var ms_delay = opt.delay, ms_interval = opt.event_duration;
+    var ms_delay = opt.delay, ms_interval = opt.event_duration;
 
 
     var i, x, y, y_value, aux_value,
@@ -982,7 +982,7 @@ var ms_delay = opt.delay, ms_interval = opt.event_duration;
         if (financial_max > -1 && ceiling >= financial_max) {
             ceiling = Math.pow(10,base);
             while (max_y >= ceiling) ceiling+=Math.pow(10,base);
-        //while (max_y >= ceiling) ceiling+=Math.pow(10,base-1)*5;
+            //while (max_y >= ceiling) ceiling+=Math.pow(10,base-1)*5;
         }
         else {
             if (max_y >= ceiling) ceiling*=2;
@@ -1219,7 +1219,7 @@ var ms_delay = opt.delay, ms_interval = opt.event_duration;
                                 y: ly
                             });
                             ly+=15;
-                        //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
+                            //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
                         }
                         else {
                             label[fun+2].attr({
@@ -1406,10 +1406,10 @@ function drawSpider(widget) {
             // Raphael:: draw as much polygons as levels, each one with a bigger radius
             polygon_radius+=interval;
             polygons.push(paper.polygon(origin_x, origin_y, polygon_radius, levels)
-                .attr({
-                    stroke : stroke_color,
-                    "stroke-width": stroke_width
-                }));
+            .attr({
+                stroke : stroke_color,
+                "stroke-width": stroke_width
+            }));
             paper.text(origin_x+3,origin_y-polygon_radius+(interval/2)+5,i).attr(txt_levels);
         }
         paper.text(origin_x+3,origin_y-(polygon_radius+=interval)+(interval/2)+5,max_value+"+").attr(txt_levels);
@@ -1460,7 +1460,7 @@ function drawSpider(widget) {
     // popup var
     var in_text, text_svg,
     value_text = opt.value_text != null
-    ? " "+opt.value_text : "",
+        ? " "+opt.value_text : "",
     popup_background = opt.popup_background_color,
     popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
@@ -1618,8 +1618,8 @@ function drawSpider(widget) {
                             }
                             if (fun != fun_index) {
                                 share_dot =
-                                shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
-                                shape_points_array[fun][index].y == shape_points_array[fun_index][index].y;
+                                    shape_points_array[fun][index].x == shape_points_array[fun_index][index].x &&
+                                    shape_points_array[fun][index].y == shape_points_array[fun_index][index].y;
 
                                 if (share_dot) {
 
