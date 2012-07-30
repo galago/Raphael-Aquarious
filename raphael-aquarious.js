@@ -165,6 +165,8 @@ function AnimationAbstraction(options) {
     this.current_event_duration = this.event_duration;
     this.current_delay = this.delay;
     this.current_easing = this.easing;
+    this.elements_queue = new Array();
+    this.attributes_queue = new Array();
 
     /**
      * Handler of the animations with the abstractor settings
@@ -237,6 +239,38 @@ function AnimationAbstraction(options) {
 
     // TODO
     this.syncAnimation = function(elem, options, attributes, callback) {
+
+    }
+
+    // TODO makes an animation queue that plays one after the other
+    this.queueAnimation = function(elem, attributes) {
+        var animation = null;
+        if (this.has_animation) {
+            if (elem !== null && attributes !== null) {
+                // enqueue animation
+                this.elements_queue.push(elem);            
+                this.attributes_queue.push(attributes);
+                console.log(elem);
+                console.log(attributes);
+                console.log(this.elements_queue);
+                console.log(this.attributes_queue);                  
+                function handleQueueAnimation () {
+                  
+                    // handles first animation in queue
+                    animation = Raphael.animation(this.attributes_queue.shift(), this.current_event_duration, this.current_easing, function(){
+                        //callback queue
+                        this.queueAnimation(this.elements_queue.shift(), this.attributes_queue.shift());
+                    });
+
+                    this.elements_queue.shift().animate(animation.delay(this.current_delay));        
+                }
+                
+                handleQueueAnimation();
+            }
+        } else {
+            elem.attr(attributes);
+        }
+        return animation;
 
     }
 
@@ -560,14 +594,15 @@ function drawCounter(widget) {
             "font-weight": "bold",
             "text-anchor": "middle"
         });
-       
-    } 
-    
+
+    }
+
     if (opt.has_animation) {
         var event_duration = opt.event_duration > 0 ? opt.event_duration : 300;
         counter.animate(Raphael.animation({
             opacity: 0
         }, event_duration, opt.easing, function() {
+            // callback
             counter.attr({
                 text: output_value
             }).animate(Raphael.animation({
@@ -582,7 +617,7 @@ function drawCounter(widget) {
         });
         fix_clipping();
     }
-    
+
     widget.svg = counter;
     return widget;
 }
@@ -751,7 +786,7 @@ function drawThermometer(widget) {
     value = opt.value;
     if (opt.event_duration==0) opt.event_duration = 2500;
 
-    var animator = new AnimationAbstraction(opt),
+    var animator = thermometer == null ? new AnimationAbstraction(opt) : widget.animator,
     levels = opt.levels,
     i, x = 5, y = 35,
     final_pos,
@@ -803,11 +838,22 @@ function drawThermometer(widget) {
     thermometer = paper.set().push(pointer);
     widget.svg = thermometer;
     widget.last_value = value;
+    widget.animator = animator;
     return widget;
 }
 
 // TODO
-function createBarChart (paper, width, height, chart_type, values, options) {
+function createBarChart (widget) {
+    // default
+    var bar_chart = widget.svg,
+    paper = widget.paper,
+    opt = widget.options,
+    width = opt.width,
+    height = opt.height,
+    values = opt.value,
+    // cutsom
+    chart_type = opt.chart_type;
+
     var graph_width,
     graph_height,
     bar_x,
