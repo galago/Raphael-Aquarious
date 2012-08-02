@@ -1372,10 +1372,7 @@ function drawLineChart (widget) {
         // Pone los puntos por delante para que no esten por detras del fill
         for (i=0;i<dots[fun].length;i++) {
             dots[fun][i].toFront();
-        }
-        paper.renderfix();
-
-        return widget;
+        }        
     }
 
     //if (fun == values.length-1) {
@@ -1409,7 +1406,7 @@ function drawLineChart (widget) {
     chart.fill = fill;
     chart.dots = dots;
     chart.over_areas = over_areas;
-    return chart;
+    return widget;
 }
 
 
