@@ -37,6 +37,11 @@
                     gauge3.updateValue(Math.random());
                     thermometer1.updateValue(getRandomInt(0,31));
                     thermometer2.updateValue(getRandomInt(0,19));
+//                    chart1.updateValue();
+//                    chart2.updateValue();
+                    chart3.updateValue([[{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}]]);
+//                    chart4.updateValue();
+//                    chart5.updateValue();                    
                     spider2.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
                         [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
                     spider3.updateValue([getRandomInt(0,8),getRandomInt(0,8),getRandomInt(0,8)]);
@@ -190,6 +195,19 @@
                     no_fill: false,
                     has_animation: false
                 });
+                chart2_large = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart2_large",
+                    width: 900,
+                    height: 300,
+                    value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
+                    function_line_width:3,
+                    function_dot_width:0,
+                    function_line_colors:["#FF3300"],
+                    popup_background_color:"#E0E0E0",
+                    no_fill: false,
+                    has_animation: false
+                });
 
                 chart3 = new Widget({
                     type: "line_chart",
@@ -221,7 +239,7 @@
                     function_line_colors:["#288DFA","#FA2B28"],
                     function_line_colors:["#3494FA","#FA3834"],
                     popup_background_color: "#999",
-                    no_fill: true
+                    no_fill: false
                 });
 
                 chart5 = new Widget({
@@ -406,6 +424,7 @@
 
         <div id="holder_line_chart1"></div>
         <div id="holder_line_chart2"></div>
+        <div id="holder_line_chart2_large"></div>
         <div id="holder_line_chart3"></div>
         <div id="holder_line_chart4"></div>
         <div id="holder_line_chart5"></div>

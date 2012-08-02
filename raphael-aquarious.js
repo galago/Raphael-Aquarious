@@ -545,7 +545,7 @@ function Widget(options) {
      * Pauses the widget animation
      */
     this.pause = function() {
-        this.paper.forEach(function (el) {            
+        this.paper.forEach(function (el) {
             el.pause();
         });
         return this;
@@ -962,7 +962,7 @@ function drawBarChart (widget) {
  *  @author Hal9000
  */
 function drawLineChart (widget) {
-    var chart1 = widget.svg,
+    var chart = widget.svg,
     paper = widget.paper,
     opt = widget.options,
     width = opt.width,
@@ -972,7 +972,7 @@ function drawLineChart (widget) {
     if (opt.event_duration==0) opt.event_duration = 600;
     if (opt.delay==0) opt.delay = 100;
     var animator = new AnimationAbstraction(opt);
-    var ms_delay = opt.delay, ms_interval = opt.event_duration;
+    var accumulated_delay = opt.delay, ms_interval = opt.event_duration;
 
 
     var i, x, y, y_value, aux_value,
@@ -1008,12 +1008,10 @@ function drawLineChart (widget) {
     function_line_width = opt.function_line_width,
     function_dot_width = opt.function_dot_width,
     color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color),
-    horizontal_axis_lines,
-    fill,
     dots = [],
+    fill,
     over_areas = [],
-    over_rect_length,
-    chart = paper.set();
+    over_rect_length;
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
     if (!multifun) values = new Array(values);
@@ -1023,18 +1021,18 @@ function drawLineChart (widget) {
     popup_background = opt.popup_background_color,
     popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
-    label = paper.set();
-    label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
+    popup_label = paper.set();
+    popup_label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
     y=30;
     for (i=0;i<values.length;i++) {
-        label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
+        popup_label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
             fill: color[0],
             "font-weight": "bold"
         }));
         y+=15;
     }
-    label.hide();
-    var frame = paper.popup(100, 100, label, "right").attr({
+    popup_label.hide();
+    var popup_frame = paper.popup(100, 100, popup_label, "right").attr({
         fill: popup_background,
         stroke: "#666",
         "stroke-width": 2,
@@ -1048,6 +1046,7 @@ function drawLineChart (widget) {
         default:
             in_text = " in";
     }
+
     // Detectamos los máximos en función de los valores de entrada y se amplian en un pequeño margen
     // Tambien rellenamos el array con todos los posibles valores del eje x
     for (fun=0;fun<values.length;fun++) {
@@ -1083,50 +1082,66 @@ function drawLineChart (widget) {
         while((typeof((ceiling/gaps_y))=='number') && ((ceiling/gaps_y).toString().indexOf('.')!=-1)) ceiling++;
     }
 
-    // Dibuja las líneas de referencia para el eje y
+    // if max_y changes on update, redraw the whole chart, else update the lines with new values
+    if (chart != null && ceiling > chart.ceiling) {
+        widget.svg = null;
+        paper.clear();
+        return drawLineChart(widget);        
+    }
+
+    // Draw the chart coordinate axis and labels
     x_margin = x_margin*(String(ceiling).length);
     x_chart = x_margin+12;
     chart_width = width - x_chart;
     chart_height = height - 60;
     aux_value = gaps_y;
     over_rect_length = width/values_x.length;
-    paper.setStart();
-    // Dibuja los valores del eje y
-    for (i=0;i<=gaps_y;i++) {
-        y = y_chart + chart_height/gaps_y*i;
-        // Valores de referencia en eje y
-        paper.text(x_margin,y,formatCurrency((ceiling/gaps_y*aux_value--),'',Aquarious.thousands,Aquarious.decimal,false)).attr(Aquarious.txt2).attr({
-            "text-anchor": "end"
-        });
-        // Lineas horizontales de referencia
-        paper.path("M"+x_chart+" "+y+"H"+(width)).attr({
-            "stroke-width": line_stroke_width
-        });
+    if (chart == null) {
+        // Draw the values of the Y axis
+        for (i=0;i<=gaps_y;i++) {
+            y = y_chart + chart_height/gaps_y*i;
+            // Value labels of Y axis
+            paper.text(x_margin,y,formatCurrency((ceiling/gaps_y*aux_value--),'',Aquarious.thousands,Aquarious.decimal,false)).attr(Aquarious.txt2).attr({
+                "text-anchor": "end"
+            });
+            // Reference lines of Y axis
+            paper.path("M"+x_chart+" "+y+"H"+(width)).attr({
+                "stroke-width": line_stroke_width
+            });
+        }
     }
-    horizontal_axis_lines = paper.setFinish();
 
-    // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__chart_width__|_
+    // Leave a 5% width to each side to leave "air" between the values and the end of the canvas  _|__chart_width__|_
     chart_width -= chart_width*.10;
-    // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores,
-    // el tamanio del grafico y la longitud del string de referencia. (un char 14px de media 7.5px wide)
+    // Calculates the number of reference values of X axis depending in the amount of values,
+    // the size of the graphic and the length of the reference string. (a char 14px its 7.5px average)
     gaps_x = Math.floor(chart_width / (values_x[values_x.length-1].toString().length*10));
     if (gaps_x > values_x.length) gaps_x = values_x.length;
     gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
 
-    // Dibuja las líneas de referencia para el eje x además de las líneas del gráfico en función de las funciones y sus valores
+    // retrieve widget objects if there are
+    if (chart != null) {
+        dots = chart.dots;
+        over_areas = chart.over_areas;
+        paths = chart.paths;
+    }
+
+    // Drar reference marks of X axis as well as the lines of the line chart based on the input values
     for (fun=0;fun<values.length;fun++) {
-        dots[fun] = [];
-        paths[fun] = [];
-        over_areas[fun] = [];
+        if (chart == null) {
+            dots[fun] = [];
+            paths[fun] = [];
+            over_areas[fun] = [];
+        }
 
         x = x_chart + chart_width*.05 - chart_width/(values[fun].length-1);
 
         for (i=0;i<values[fun].length;i++) {
             x += chart_width/(values[fun].length-1);
             //x = x_chart + chart_width/values[fun].length*i + x_margin;
-            // En la primera pasada dibujamos el eje x
-            if (fun == 0) {
-                // Si hay muchos valores diferentes, no se dibujan todas las referencias por cuestiones minimalistas
+            // The first iteration draws the X axis
+            if (fun == 0 && chart == null) {
+                // If there are many different values, it doesn't draw all the reference marks for minimalistic issues
                 if (i%gaps_x_frequency == 0) {
                     paper.text(x,y+y_margin,values[fun][i].x).attr(Aquarious.txt2);
                     paper.path(Raphael.format("M{0} {1}V{2}", x, y+8, chart_height+20)).attr({
@@ -1134,21 +1149,27 @@ function drawLineChart (widget) {
                     });
                 }
             }
-            // Dibuja la linea de la gráfica
+            // Draw the chart function lines or updates them
             y_value = y_chart + Math.abs(chart_height - (chart_height/ceiling)*values[fun][i].y);
             if (i < values[fun].length-1) {
                 path_string[i] = "M"+x+" "+y_value+" L";
-                paths[fun][i] = paper.path(path_string[i]).attr({
-                    stroke: color[fun],
-                    "stroke-width" : function_line_width,
-                    "stroke-linejoin": "round"
-                });
+                if (chart == null) {
+                    paths[fun][i] = paper.path(path_string[i]).attr({
+                        stroke: color[fun],
+                        "stroke-width" : function_line_width,
+                        "stroke-linejoin": "round"
+                    });
+                }
             }
             if (i>0) {
                 path_string[i-1] += x+" "+y_value+"z";
-                paths[fun][i-1].animate(Raphael.animation({
+                animator.handleCustom(paths[fun][i-1], {
+                    event_duration: opt.event_duration - 300,
+                    delay: accumulated_delay - 200
+                }, {
                     path:path_string[i-1]
-                }, ms_interval-300, "<>").delay(ms_delay-200));
+                });
+            //}, ms_interval-300, "<>").delay(accumulated_delay-200));
             }
 
             x_aux[i] = x;
@@ -1210,9 +1231,12 @@ function drawLineChart (widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5
                         });
                         path_string_aux += Raphael.format("{0} {1}z", point_aux_end.x, point_aux_end.y);
-                        parallel1.animate(Raphael.animation({
+                        animator.handleCustom(parallel1, {
+                            event_duration: opt.event_duration - 300,
+                            delay: accumulated_delay - 200
+                        }, {
                             path: path_string_aux
-                        }, ms_interval-300, "<>").delay(ms_delay-200));
+                        });
                         // linea 2
                         point_aux_origin = perpendicular2_origin.getPointAtLength(gap);
                         point_aux_end = perpendicular2_end.getPointAtLength(gap);
@@ -1222,18 +1246,30 @@ function drawLineChart (widget) {
                             "stroke-width" : (function_line_width/number_lines)+.5
                         });
                         path_string_aux += Raphael.format("{0} {1}z", point_aux_end.x, point_aux_end.y);
-                        parallel2.animate(Raphael.animation({
+
+                        animator.handleCustom(parallel2, {
+                            event_duration: opt.event_duration - 300,
+                            delay: accumulated_delay - 200
+                        }, {
                             path: path_string_aux
-                        }, ms_interval-300, "<>").delay(ms_delay-200));
+                        });
                         gap += inc;
                     }
                     // Ocultamos los objetos que estan debajo para que no hagan una fea aberracion cromatica debido a la suerposicion
-                    dots[fun_index[fun_index_pointer]][i-1].animate(Raphael.animation({
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i-1], {
+                        event_duration: opt.event_duration - 300,
+                        delay: accumulated_delay - 200,
+                        easing: '>'
+                    }, {
                         "stroke-width" : 0//function_dot_width*2
-                    }, ms_interval-300, ">").delay(ms_delay-200));
-                    dots[fun_index[fun_index_pointer]][i].animate(Raphael.animation({
-                        "stroke-width" : 0
-                    }, ms_interval-300, ">").delay(ms_delay-200));
+                    });
+                    animator.handleCustom(dots[fun_index[fun_index_pointer]][i], {
+                        event_duration: opt.event_duration - 300,
+                        delay: accumulated_delay - 200,
+                        easing: '>'
+                    }, {
+                        "stroke-width" : 0//function_dot_width*2
+                    });
                     perpendicular1_origin.remove();
                     perpendicular1_end.remove();
                     perpendicular2_origin.remove();
@@ -1244,135 +1280,156 @@ function drawLineChart (widget) {
             if (i == 0) path_string_fill = "M"+x+" "+y+" L"+x+" "+y_value;
             else path_string_fill += " "+x+" "+y_value;
             // Dibuja el punto del valor x,y de cada elemento
-            dots[fun][i] = paper.circle(x,y_value,0).attr({
-                stroke: color[fun],
-                "stroke-width": function_dot_width,
-                fill: color[fun]
-            })
-            .animate(Raphael.animation({
+            if (chart == null) {
+                dots[fun][i] = paper.circle(x,y_value,0).attr({
+                    stroke: color[fun],
+                    "stroke-width": function_dot_width,
+                    fill: color[fun]
+                });
+            }
+            animator.handleCustom(dots[fun][i], {
+                event_duration: 1000,
+                delay: accumulated_delay,
+                easing: 'elastic'
+            }, {
                 r: function_dot_width
-            }, 1000, 'elastic').delay(ms_delay));
-            ms_delay+=ms_interval;
+            });
+            accumulated_delay+=ms_interval;
             // Dibuja un rectángulo transparente para gestionar los eventos over
-            if (multifun) {
-                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_value-8, over_rect_length, 16)
-                .attr({
-                    stroke: "none",
-                    fill: color[fun],
-                    "fill-opacity": 0
-                });
-            }
-            else {
-                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, chart_height)
-                .attr({
-                    stroke: "none",
-                    fill: color[fun],
-                    "fill-opacity": 0
-                });
-            }
-            (function (x, y, index, fun_index) {
-                over_areas[fun_index][i].mouseover(function() {
-                    var i, fun, lx, ly, ppp, anim;
-                    dots[fun_index][index].animate({
-                        transform: 's1.5',
-                        fill: "#fff"
-                    },200, '>');
-                    clearTimeout(leave_timer);
-                    if (financial_mode)
-                        label[0].attr({
-                            text: formatCurrency(values[fun_index][index].y,Aquarious.currency,Aquarious.thousands,Aquarious.decimal,false)
-                        });
-                    else
-                        label[0].attr({
-                            text: values[fun_index][index].y + value_text + (value_text != "" && values[fun_index][index].y != 1 ? "s" : "") + in_text
-                        });
-                    label[1].attr({
-                        text: values[fun_index][index].x,
-                        fill: color[fun_index]
+            if (chart == null) {
+                if (multifun) {
+                    over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_value-8, over_rect_length, 16)
+                    .attr({
+                        stroke: "none",
+                        fill: color[fun],
+                        "fill-opacity": 0
                     });
-                    // Si se solapan lineas o puntos se gestionan para su correcta visualizacion
-                    ly = 45;
-                    for (fun=0;fun<values.length-1;fun++) {
-                        if (fun != fun_index &&
-                            values[fun][index].x == values[fun_index][index].x &&
-                            values[fun][index].y == values[fun_index][index].y) {
-                            dots[fun_index][index].animate({
-                                transform: 's1.8',
-                                fill: color[fun]
-                            },200, '>');
-                            label[fun+2].attr({
-                                text: values[fun][index].x,
-                                fill: color[fun],
-                                opacity: 1,
-                                y: ly
+                }
+                else {
+                    over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, chart_height)
+                    .attr({
+                        stroke: "none",
+                        fill: color[fun],
+                        "fill-opacity": 0
+                    });
+                }
+            }
+            if (chart == null) {
+                function over_events (x, y, index, fun_index) {
+                    over_areas[fun_index][i].mouseover(function() {
+                        var i, fun, lx, ly, ppp, anim;
+                        dots[fun_index][index].animate({
+                            transform: 's1.5',
+                            fill: "#fff"
+                        },200, '>');
+                        clearTimeout(leave_timer);
+                        if (financial_mode)
+                            popup_label[0].attr({
+                                text: formatCurrency(values[fun_index][index].y,Aquarious.currency,Aquarious.thousands,Aquarious.decimal,false)
                             });
-                            ly+=15;
-                        //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
-                        }
-                        else {
-                            label[fun+2].attr({
-                                opacity: 0,
-                                y: 30
+                        else
+                            popup_label[0].attr({
+                                text: values[fun_index][index].y + value_text + (value_text != "" && values[fun_index][index].y != 1 ? "s" : "") + in_text
                             });
-                        }
-                    }
-                    // Dibuja el popup balloon
-                    var side = "bottom";
-                    if (y + frame.getBBox().height > chart_height) {
-                        side = "top";
-                    }
-                    ppp = paper.popup(x, y, label, side, 1);
-                    anim = Raphael.animation({
-                        path: ppp.path,
-                        transform: ["t", ppp.dx, ppp.dy]
-                    }, 250 * is_label_visible);
-                    // Calcula las nuevas coordeandas de los elementos del popup
-                    lx = label[0].transform()[0][1] + ppp.dx;
-                    ly = label[0].transform()[0][2] + ppp.dy;
-                    frame.show().stop().animate(anim);
-
-                    for (i=0;i<label.length;i++) {
-                        label[i].show().stop().animateWith(frame, anim, {
-                            transform: ["t", lx, ly]
-                        }, 250 * is_label_visible);
-                    }
-                    is_label_visible = true;
-                });
-                over_areas[fun_index][i].mouseout(function() {
-                    for (var i=1;i<values.length;i++) {
-                        label[i+1].attr({
-                            opacity: 0
+                        popup_label[1].attr({
+                            text: values[fun_index][index].x,
+                            fill: color[fun_index]
                         });
-                    }
-                    dots[fun_index][index].animate({
-                        transform: 's1',
-                        fill: color[fun_index]
-                    },400, '<');
-                    leave_timer = setTimeout(function () {
-                        frame.hide();
-                        label.hide();
-                        is_label_visible = false;
-                    }, 1);
-                });
-            })(x, y_value, i, fun);
+                        // Si se solapan lineas o puntos se gestionan para su correcta visualizacion
+                        ly = 45;
+                        for (fun=0;fun<values.length-1;fun++) {
+                            if (fun != fun_index &&
+                                values[fun][index].x == values[fun_index][index].x &&
+                                values[fun][index].y == values[fun_index][index].y) {
+                                dots[fun_index][index].animate({
+                                    transform: 's1.8',
+                                    fill: color[fun]
+                                },200, '>');
+                                popup_label[fun+2].attr({
+                                    text: values[fun][index].x,
+                                    fill: color[fun],
+                                    opacity: 1,
+                                    y: ly
+                                });
+                                ly+=15;
+                            //dots[fun][index].animate({transform: 's2.8', fill: color[fun]},200, '>');
+                            }
+                            else {
+                                popup_label[fun+2].attr({
+                                    opacity: 0,
+                                    y: 30
+                                });
+                            }
+                        }
+                        // Dibuja el popup balloon
+                        var side = "bottom";
+                        if (y + popup_frame.getBBox().height > chart_height) {
+                            side = "top";
+                        }
+                        ppp = paper.popup(x, y, popup_label, side, 1);
+                        anim = Raphael.animation({
+                            path: ppp.path,
+                            transform: ["t", ppp.dx, ppp.dy]
+                        }, 250 * is_label_visible);
+                        // Calcula las nuevas coordeandas de los elementos del popup
+                        lx = popup_label[0].transform()[0][1] + ppp.dx;
+                        ly = popup_label[0].transform()[0][2] + ppp.dy;
+                        popup_frame.show().stop().animate(anim);
+
+                        for (i=0;i<popup_label.length;i++) {
+                            popup_label[i].show().stop().animateWith(popup_frame, anim, {
+                                transform: ["t", lx, ly]
+                            }, 250 * is_label_visible);
+                        }
+                        is_label_visible = true;
+                    });
+                    over_areas[fun_index][i].mouseout(function() {
+                        for (var i=1;i<values.length;i++) {
+                            popup_label[i+1].attr({
+                                opacity: 0
+                            });
+                        }
+                        dots[fun_index][index].animate({
+                            transform: 's1',
+                            fill: color[fun_index]
+                        },400, '<');
+                        leave_timer = setTimeout(function () {
+                            popup_frame.hide();
+                            popup_label.hide();
+                            is_label_visible = false;
+                        }, 1);
+                    });
+                }; 
+            } 
+            else {
+                // Removes event handlers of older over_areas
+                over_areas[fun][i].unmouseover();
+                over_areas[fun][i].unmouseout();
+            }
+            over_events(x, y_value, i, fun);         
+            
         }
 
         // Dibuja el relleno del path de la funcion al eje
-        if (!(opt != null && opt.no_fill != null && opt.no_fill == true)) {
-            fill = paper.path(path_string_fill+" "+x+" "+y+"z").attr({
+        if (!opt.no_fill) {
+            fill = (chart == null) ? 
+            paper.path(path_string_fill+" "+x+" "+y+"z").attr({
                 stroke: "none",
                 fill: color[fun],
                 "fill-opacity": 0.2,
                 opacity: 0
-            })
-            .animate(Raphael.animation({
+            }) : chart.fill;
+            animator.handleCustom(fill, {
+                event_duration: 1000,
+                delay: accumulated_delay
+            }, {            
                 opacity: 1
-            }, 1000, "<>").delay(ms_delay));
+            });
         }
         // Pone los puntos por delante para que no esten por detras del fill
         for (i=0;i<dots[fun].length;i++) {
             dots[fun][i].toFront();
-        }        
+        }
     }
 
     //if (fun == values.length-1) {
@@ -1383,7 +1440,7 @@ function drawLineChart (widget) {
     //               (function (x, y, index, fun_index) {
     //                   over_areas[values.length-1][index].mouseover(function() {
     //                        dots[values.length-1][index].animate({transform: 's1.8', fill: color[fun_index]},200, '>');
-    //                        label.push(paper.text(60, 50, values[fun_index][index].x).attr(Aquarious.txt1).attr({fill: color[fun_index], "font-weight": "bold"}));
+    //                        popup_label.push(paper.text(60, 50, values[fun_index][index].x).attr(Aquarious.txt1).attr({fill: color[fun_index], "font-weight": "bold"}));
     //                   });
     //               })(0, 0, i, fun);
     //           }
@@ -1392,8 +1449,8 @@ function drawLineChart (widget) {
     //}
 
     // Traemos el popup al frente
-    frame.toFront();
-    label.toFront();
+    popup_frame.toFront();
+    popup_label.toFront();
     // Traemos las over areas al frente. Siempre tienen que ser los objetos mas al frente para no interferir con su cometido
     for (fun=0;fun<over_areas.length;fun++) {
         for (i=0;i<over_areas[fun].length;i++) {
@@ -1401,50 +1458,54 @@ function drawLineChart (widget) {
         }
     }
 
-    chart.horizontal_axis_lines = horizontal_axis_lines;
+    chart = new Object();
+    chart.popup_label = popup_label;
+    chart.popup_frame = popup_frame;
     chart.paths = paths;
-    chart.fill = fill;
     chart.dots = dots;
+    chart.fill = fill;
     chart.over_areas = over_areas;
+    chart.ceiling = ceiling;
+    widget.svg = chart;
     return widget;
 }
 
 
 /**
- *  Draw a spider chart based in the number of values and the number of possible levels.
- *
- *  Options available:
- *
- *      Default:
- *      - width
- *      - height
- *      - value (must have) | monofunction - array with numbers which represent
- *                                           the values of the chart function in
- *                                           clockwise orther, starting at "12hours".
- *                              OR
- *                            multifunction - array of arrays which represent multiple
- *                                            chart functions, each one composed of different values.
- *      - has_animation
- *      - delay
- *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
- *      - easing
- *
- *
- *      Custom:
- *      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
- *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
- *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - function_line_width  | The width in pixels of the chart function line(s)
- *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
- *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
- *      - popup_background     | The color code of the popup background
- *      - popup_opacity        | The opacity 0-1 of the popup background
- *
- *  @return the widget object
- *
- *  @author Hal9000
- */
+     *  Draw a spider chart based in the number of values and the number of possible levels.
+     *
+     *  Options available:
+     *
+     *      Default:
+     *      - width
+     *      - height
+     *      - value (must have) | monofunction - array with numbers which represent
+     *                                           the values of the chart function in
+     *                                           clockwise orther, starting at "12hours".
+     *                              OR
+     *                            multifunction - array of arrays which represent multiple
+     *                                            chart functions, each one composed of different values.
+     *      - has_animation
+     *      - delay
+     *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
+     *      - easing
+     *
+     *
+     *      Custom:
+     *      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
+     *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
+     *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
+     *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+     *      - function_line_width  | The width in pixels of the chart function line(s)
+     *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+     *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
+     *      - popup_background     | The color code of the popup background
+     *      - popup_opacity        | The opacity 0-1 of the popup background
+     *
+     *  @return the widget object
+     *
+     *  @author Hal9000
+     */
 function drawSpider(widget) {
     var spider = widget.svg,
     paper = widget.paper,
@@ -1550,8 +1611,8 @@ function drawSpider(widget) {
     popup_background = opt.popup_background_color,
     popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
-    label,
-    frame,
+    popup_label,
+    popup_frame,
     label_heights = [];
     for (i=0;i<labels.length;i++) {
         text_svg = paper.text(0,0,labels[i]).attr(Aquarious.txt).attr({
@@ -1561,27 +1622,27 @@ function drawSpider(widget) {
         text_svg.remove();
     }
     if (spider == null) {
-        label = paper.set();
-        // Metemos en una variable los labels ocultos para calcular tamanios en el posicionamiento del popup y sus label
-        label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
+        popup_label = paper.set();
+        // Metemos en una variable los labels ocultos para calcular tamanios en el posicionamiento del popup y sus popup_label
+        popup_label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
         y=30;
         for (i=0;i<values.length;i++) {
-            label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
+            popup_label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
                 fill: color[0],
                 "font-weight": "bold"
             }));
             y+=label_heights[i];
         }
-        label.hide();
-        frame = paper.popup(100, 100, label, "right").attr({
+        popup_label.hide();
+        popup_frame = paper.popup(100, 100, popup_label, "right").attr({
             fill: popup_background,
             stroke: "#666",
             "stroke-width": 2,
             "fill-opacity": popup_opacity
         }).hide();
     } else {
-        label = spider.label;
-        frame = spider.frame;
+        popup_label = spider.popup_label;
+        popup_frame = spider.popup_frame;
     }
     // UI labels
     switch (Aquarious.lang_ui) {
@@ -1685,11 +1746,11 @@ function drawSpider(widget) {
                             fill: "#fff"
                         });
                         clearTimeout(leave_timer);
-                        label[0].attr({
+                        popup_label[0].attr({
                             text: values[fun_index][index] + value_text + (value_text != "" && values[fun_index][index] != 1 ? "s" : "") + in_text
                         });
                         ly = 22 + label_heights[index]/2;
-                        label[1].attr({
+                        popup_label[1].attr({
                             text: labels[index],
                             fill: color[fun_index],
                             y: ly
@@ -1697,7 +1758,7 @@ function drawSpider(widget) {
                         // Si se solapan lineas o puntos se gestionan para su correcta visualizacions
                         for (fun=0;fun<values.length;fun++) {
                             if (fun < values.length-1) {
-                                label[fun+2].attr({
+                                popup_label[fun+2].attr({
                                     opacity: 0,
                                     y: 30
                                 });
@@ -1718,8 +1779,8 @@ function drawSpider(widget) {
                                         transform: 's1.8',
                                         fill: color[fun]
                                     });
-                                    if (label[fun+2] != null) {
-                                        label[fun+2].attr({
+                                    if (popup_label[fun+2] != null) {
+                                        popup_label[fun+2].attr({
                                             text: labels[index],
                                             fill: color[fun],
                                             opacity: 1,
@@ -1740,21 +1801,21 @@ function drawSpider(widget) {
                         }
                         // Dibuja el popup balloon
                         var side = "right";
-                        if (x + frame.getBBox().width > 333) {
+                        if (x + popup_frame.getBBox().width > 333) {
                             side = "left";
                         }
-                        var ppp = paper.popup(x, y, label, side, 1),
+                        var ppp = paper.popup(x, y, popup_label, side, 1),
                         anim = Raphael.animation({
                             path: ppp.path,
                             transform: ["t", ppp.dx, ppp.dy]
                         }, 250 * is_label_visible);
                         // Calcula las nuevas coordeandas de los elementos del popup
-                        lx = label[0].transform()[0][1] + ppp.dx;
-                        ly = label[0].transform()[0][2] + ppp.dy;
-                        frame.show().stop().animate(anim);
+                        lx = popup_label[0].transform()[0][1] + ppp.dx;
+                        ly = popup_label[0].transform()[0][2] + ppp.dy;
+                        popup_frame.show().stop().animate(anim);
 
-                        for (i=0;i<label.length;i++) {
-                            label[i].show().stop().animateWith(frame, anim, {
+                        for (i=0;i<popup_label.length;i++) {
+                            popup_label[i].show().stop().animateWith(popup_frame, anim, {
                                 transform: ["t", lx, ly]
                             }, 250 * is_label_visible);
                         }
@@ -1771,7 +1832,7 @@ function drawSpider(widget) {
                                 opacity: 1
                             });
                             if (i>0) {
-                                label[i+1].attr({
+                                popup_label[i+1].attr({
                                     opacity: 0
                                 });
                             }
@@ -1785,8 +1846,8 @@ function drawSpider(widget) {
                             fill: color[fun_index]
                         });
                         leave_timer = setTimeout(function () {
-                            frame.hide();
-                            label.hide();
+                            popup_frame.hide();
+                            popup_label.hide();
                             is_label_visible = false;
                         }, 1);
                     });
@@ -1885,7 +1946,7 @@ function drawSpider(widget) {
                         });
                         //                        parallel1.animate(Raphael.animation({
                         //                            "stroke-opacity": 1
-                        //                        }, ms_interval-300, "<>").delay(ms_delay)).toFront();
+                        //                        }, ms_interval-300, "<>").delay(accumulated_delay)).toFront();
 
                         // linea 2
                         point_aux_origin = perpendicular2_origin.getPointAtLength(gap);
@@ -1959,8 +2020,8 @@ function drawSpider(widget) {
     }
 
     // Traemos el popup al frente
-    frame.toFront();
-    label.toFront();
+    popup_frame.toFront();
+    popup_label.toFront();
     // Traemos las over areas al frente
     for (fun=0;fun<over_areas.length;fun++) {
         for (i=0;i<over_areas[fun].length;i++) {
@@ -1970,8 +2031,8 @@ function drawSpider(widget) {
 
     //spider = paper.set().push(shape,over_areas,dots,polygons);
     spider = new Object();
-    spider.label = label;
-    spider.frame = frame;
+    spider.popup_label = popup_label;
+    spider.popup_frame = popup_frame;
     spider.polygons = polygons;
     spider.dots = dots;
     spider.over_areas = over_areas;
