@@ -167,6 +167,7 @@ function AnimationAbstraction(options) {
     this.current_easing = this.easing;
     this.elements_queue = new Array();
     this.attributes_queue = new Array();
+    this._animation;
 
     /**
      * Handler of the animations with the abstractor settings
@@ -178,17 +179,17 @@ function AnimationAbstraction(options) {
      * @return the animation object
      */
     this.handle = function(elem, attributes, callback) {
-        var animation = null;
+        this._animation = null;
         if (this.has_animation) {
-            animation = Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback);
-            elem.animate(animation.delay(this.current_delay));
+            this._animation = Raphael.animation(attributes, this.current_event_duration, this.current_easing, callback);
+            elem.animate(this._animation.delay(this.current_delay));
             this.total_duration += this.current_event_duration + this.current_delay;
             //console.log("total_delay:"+this.total_delay+" current_delay:"+this.current_delay+" current_event_duration:"+this.current_event_duration);
             this.resetCurrent();
         } else {
             elem.attr(attributes);
         }
-        return animation;
+        return this._animation;
     }
 
     /**
@@ -248,23 +249,23 @@ function AnimationAbstraction(options) {
         if (this.has_animation) {
             if (elem !== null && attributes !== null) {
                 // enqueue animation
-                this.elements_queue.push(elem);            
+                this.elements_queue.push(elem);
                 this.attributes_queue.push(attributes);
                 console.log(elem);
                 console.log(attributes);
                 console.log(this.elements_queue);
-                console.log(this.attributes_queue);                  
+                console.log(this.attributes_queue);
                 function handleQueueAnimation () {
-                  
+
                     // handles first animation in queue
                     animation = Raphael.animation(this.attributes_queue.shift(), this.current_event_duration, this.current_easing, function(){
                         //callback queue
                         this.queueAnimation(this.elements_queue.shift(), this.attributes_queue.shift());
                     });
 
-                    this.elements_queue.shift().animate(animation.delay(this.current_delay));        
+                    this.elements_queue.shift().animate(animation.delay(this.current_delay));
                 }
-                
+
                 handleQueueAnimation();
             }
         } else {
@@ -309,6 +310,10 @@ function AnimationAbstraction(options) {
         this.current_event_duration = this.event_duration;
         this.current_delay = this.delay;
         this.current_easing = this.easing;
+    }
+
+    this.pause = function() {
+    //this._animation
     }
 }
 
@@ -411,10 +416,23 @@ function Options(options) {
             case "thermometer":
                 this.levels = options.levels != null ? options.levels : 32;
                 break;
-            case "graph":
+            case "barChart":
+                this.type = "bar_chart";
+            case "bar_chart":
                 this.financial_mode = options.financial_mode != null ? options.financial_mode : false;
                 this.financial_max = options.financial_max != null ? options.financial_max : -1;
-                this.value_text = options.value_text != null ? options.value_text : "";
+                this.value_text = options.value_text != null ? " "+options.value_text : "";
+                this.no_fill = options.no_fill != null ? options.no_fill : false;
+                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
+                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
+                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                break;
+            case "lineChart":
+                this.type = "line_chart";
+            case "line_chart":
+                this.financial_mode = options.financial_mode != null ? options.financial_mode : false;
+                this.financial_max = options.financial_max != null ? options.financial_max : -1;
+                this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
                 this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
                 this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
@@ -425,7 +443,7 @@ function Options(options) {
                     this.labels = options.labels;
                     this.max_value = options.max_value;
                 } else throw "RaphaelAquarious[spider]: missing options";
-                this.value_text = options.value_text != null ? options.value_text : "";
+                this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
                 this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
                 this.function_line_width = options.function_line_width != null ? options.function_line_width : 6;
@@ -467,24 +485,31 @@ function Widget(options) {
      * by the options object.
      */
     this.factory = function() {
-
+        var widget;
         switch (this.options.type) {
             case "counter":
-                return drawCounter(this);
+                widget = drawCounter(this);
                 break;
             case "gauge":
-                return drawGauge(this);
+                widget = drawGauge(this);
                 break;
             case "thermometer":
-                return drawThermometer(this);
+                widget = drawThermometer(this);
                 break;
-            case "graph":
-                return drawGraph(this);
+            case "bar_chart":
+                widget = drawBarChart(this);
+                break;
+            case "line_chart":
+                widget = drawLineChart(this);
                 break;
             case "spider":
-                return drawSpider(this);
+                widget = drawSpider(this);
                 break;
         }
+        // Raphael fixes
+        widget.paper.renderfix();
+        widget.paper.safari();
+        return widget;
     }
 
     /**
@@ -505,7 +530,7 @@ function Widget(options) {
      */
     this.update = function(options) {
         if (options != null) this.options = new Options(options);
-        this.svg = this.factory(this.options);
+        this.factory(this.options);
         return this;
     }
 
@@ -514,6 +539,26 @@ function Widget(options) {
      */
     this.toString = function() {
         return "Raphael Aquarious Widget\n\n"+this.options.toString();
+    }
+
+    /**
+     * Pauses the widget animation
+     */
+    this.pause = function() {
+        this.paper.forEach(function (el) {            
+            el.pause();
+        });
+        return this;
+    }
+
+    /**
+     * Resumes the widget animation
+     */
+    this.resume = function() {
+        this.paper.forEach(function (el) {
+            el.resume();
+        });
+        return this;
     }
 
     /**
@@ -843,7 +888,7 @@ function drawThermometer(widget) {
 }
 
 // TODO
-function createBarChart (widget) {
+function drawBarChart (widget) {
     // default
     var bar_chart = widget.svg,
     paper = widget.paper,
@@ -854,8 +899,8 @@ function createBarChart (widget) {
     // cutsom
     chart_type = opt.chart_type;
 
-    var graph_width,
-    graph_height,
+    var chart_width,
+    chart_height,
     bar_x,
     bar_y,
     bar_width,
@@ -879,7 +924,7 @@ function createBarChart (widget) {
 
 
 /**
- *  Draw a x,y axis graph. X axis accept continous values, not Y axis.
+ *  Draw a x,y axis chart. X axis accept continous values, not Y axis.
  *
  *  TODO async update
  *
@@ -889,10 +934,10 @@ function createBarChart (widget) {
  *      - width
  *      - height
  *      - value (must have) | monofunction - array with pairs {x,y} which represent
- *                                           the values of the graph function.
+ *                                           the values of the chart function.
  *                              OR
  *                            multifunction - array of arrays which represent multiple
- *                                            graph functions, each one composed of pairs {x,y}.
+ *                                            chart functions, each one composed of pairs {x,y}.
  *      - has_animation
  *      - delay
  *      - event_duration    | milliseconds between each pair {x,y} is drawn
@@ -900,13 +945,13 @@ function createBarChart (widget) {
  *
  *
  *      Custom:
- *      - financial_mode       | if true the graph will be formatted with monetary format
+ *      - financial_mode       | if true the chart will be formatted with monetary format
  *                               in proportional hops (500,1000,5000,10000...) as ceiling of X axis.
  *                               default false
  *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
- *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function graph, default false.
- *      - function_line_colors | (must have if multifunction) array of strings with the color code of every graph function line
- *      - function_line_width  | The width in pixels of the graph function line(s)
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
+ *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - function_line_width  | The width in pixels of the chart function line(s)
  *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
@@ -916,8 +961,8 @@ function createBarChart (widget) {
  *
  *  @author Hal9000
  */
-function drawGraph (widget) {
-    var graph1 = widget.svg,
+function drawLineChart (widget) {
+    var chart1 = widget.svg,
     paper = widget.paper,
     opt = widget.options,
     width = opt.width,
@@ -931,12 +976,12 @@ function drawGraph (widget) {
 
 
     var i, x, y, y_value, aux_value,
-    x_graph,
-    y_graph = 20,
+    x_chart,
+    y_chart = 20,
     x_margin = 10,
     y_margin = 25,
-    graph_width,
-    graph_height,
+    chart_width,
+    chart_height,
     // TODO ahora mismo no se usa ya que toma los valores de x de la primera funcion
     // esta listo para usarse en el bucle principal.
     values_x = [],
@@ -968,7 +1013,7 @@ function drawGraph (widget) {
     dots = [],
     over_areas = [],
     over_rect_length,
-    graph = paper.set();
+    chart = paper.set();
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
     if (!multifun) values = new Array(values);
@@ -1040,31 +1085,31 @@ function drawGraph (widget) {
 
     // Dibuja las líneas de referencia para el eje y
     x_margin = x_margin*(String(ceiling).length);
-    x_graph = x_margin+12;
-    graph_width = width - x_graph;
-    graph_height = height - 60;
+    x_chart = x_margin+12;
+    chart_width = width - x_chart;
+    chart_height = height - 60;
     aux_value = gaps_y;
     over_rect_length = width/values_x.length;
     paper.setStart();
     // Dibuja los valores del eje y
     for (i=0;i<=gaps_y;i++) {
-        y = y_graph + graph_height/gaps_y*i;
+        y = y_chart + chart_height/gaps_y*i;
         // Valores de referencia en eje y
         paper.text(x_margin,y,formatCurrency((ceiling/gaps_y*aux_value--),'',Aquarious.thousands,Aquarious.decimal,false)).attr(Aquarious.txt2).attr({
             "text-anchor": "end"
         });
         // Lineas horizontales de referencia
-        paper.path("M"+x_graph+" "+y+"H"+(width)).attr({
+        paper.path("M"+x_chart+" "+y+"H"+(width)).attr({
             "stroke-width": line_stroke_width
         });
     }
     horizontal_axis_lines = paper.setFinish();
 
-    // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__graph_width__|_
-    graph_width -= graph_width*.10;
+    // Dejamos un 5% del ancho a cada lado para dejar aire entre los valores y el final del canvas _|__chart_width__|_
+    chart_width -= chart_width*.10;
     // Calcula el numero de valores de referencia en el eje x dependiendo del numero de valores,
     // el tamanio del grafico y la longitud del string de referencia. (un char 14px de media 7.5px wide)
-    gaps_x = Math.floor(graph_width / (values_x[values_x.length-1].toString().length*10));
+    gaps_x = Math.floor(chart_width / (values_x[values_x.length-1].toString().length*10));
     if (gaps_x > values_x.length) gaps_x = values_x.length;
     gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
 
@@ -1074,23 +1119,23 @@ function drawGraph (widget) {
         paths[fun] = [];
         over_areas[fun] = [];
 
-        x = x_graph + graph_width*.05 - graph_width/(values[fun].length-1);
+        x = x_chart + chart_width*.05 - chart_width/(values[fun].length-1);
 
         for (i=0;i<values[fun].length;i++) {
-            x += graph_width/(values[fun].length-1);
-            //x = x_graph + graph_width/values[fun].length*i + x_margin;
+            x += chart_width/(values[fun].length-1);
+            //x = x_chart + chart_width/values[fun].length*i + x_margin;
             // En la primera pasada dibujamos el eje x
             if (fun == 0) {
                 // Si hay muchos valores diferentes, no se dibujan todas las referencias por cuestiones minimalistas
                 if (i%gaps_x_frequency == 0) {
                     paper.text(x,y+y_margin,values[fun][i].x).attr(Aquarious.txt2);
-                    paper.path(Raphael.format("M{0} {1}V{2}", x, y+8, graph_height+20)).attr({
+                    paper.path(Raphael.format("M{0} {1}V{2}", x, y+8, chart_height+20)).attr({
                         "stroke-width": line_stroke_width
                     });
                 }
             }
             // Dibuja la linea de la gráfica
-            y_value = y_graph + Math.abs(graph_height - (graph_height/ceiling)*values[fun][i].y);
+            y_value = y_chart + Math.abs(chart_height - (chart_height/ceiling)*values[fun][i].y);
             if (i < values[fun].length-1) {
                 path_string[i] = "M"+x+" "+y_value+" L";
                 paths[fun][i] = paper.path(path_string[i]).attr({
@@ -1218,7 +1263,7 @@ function drawGraph (widget) {
                 });
             }
             else {
-                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, graph_height)
+                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, chart_height)
                 .attr({
                     stroke: "none",
                     fill: color[fun],
@@ -1273,7 +1318,7 @@ function drawGraph (widget) {
                     }
                     // Dibuja el popup balloon
                     var side = "bottom";
-                    if (y + frame.getBBox().height > graph_height) {
+                    if (y + frame.getBBox().height > chart_height) {
                         side = "top";
                     }
                     ppp = paper.popup(x, y, label, side, 1);
@@ -1329,6 +1374,8 @@ function drawGraph (widget) {
             dots[fun][i].toFront();
         }
         paper.renderfix();
+
+        return widget;
     }
 
     //if (fun == values.length-1) {
@@ -1357,17 +1404,17 @@ function drawGraph (widget) {
         }
     }
 
-    graph.horizontal_axis_lines = horizontal_axis_lines;
-    graph.paths = paths;
-    graph.fill = fill;
-    graph.dots = dots;
-    graph.over_areas = over_areas;
-    return graph;
+    chart.horizontal_axis_lines = horizontal_axis_lines;
+    chart.paths = paths;
+    chart.fill = fill;
+    chart.dots = dots;
+    chart.over_areas = over_areas;
+    return chart;
 }
 
 
 /**
- *  Draw a spider graph based in the number of values and the number of possible levels.
+ *  Draw a spider chart based in the number of values and the number of possible levels.
  *
  *  Options available:
  *
@@ -1375,11 +1422,11 @@ function drawGraph (widget) {
  *      - width
  *      - height
  *      - value (must have) | monofunction - array with numbers which represent
- *                                           the values of the graph function in
+ *                                           the values of the chart function in
  *                                           clockwise orther, starting at "12hours".
  *                              OR
  *                            multifunction - array of arrays which represent multiple
- *                                            graph functions, each one composed of different values.
+ *                                            chart functions, each one composed of different values.
  *      - has_animation
  *      - delay
  *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
@@ -1387,11 +1434,11 @@ function drawGraph (widget) {
  *
  *
  *      Custom:
- *      - labels    (must have)| an array of strings with the labels of each axis. The graph will have as many axis as strings in this array
- *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the graph
- *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function graph, default false.
- *      - function_line_colors | (must have if multifunction) array of strings with the color code of every graph function line
- *      - function_line_width  | The width in pixels of the graph function line(s)
+ *      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
+ *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
+ *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - function_line_width  | The width in pixels of the chart function line(s)
  *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
@@ -1430,7 +1477,7 @@ function drawSpider(widget) {
     origin_x = width/2,
     origin_y = height/2,
     polygons,
-    labels_graph = [],
+    labels_chart = [],
     txt_levels = {
         font: '15px Helvetica, Arial',
         fill: stroke_color,
@@ -1471,7 +1518,7 @@ function drawSpider(widget) {
             else if (i>levels/2) text_align = "end"
             else text_align = "start";
 
-            labels_graph[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
+            labels_chart[i] = paper.text(line_origin_coord[i].x,line_origin_coord[i].y,labels[i])
             .attr(Aquarious.txt2).attr({
                 "text-anchor": text_align
             });
@@ -1502,8 +1549,7 @@ function drawSpider(widget) {
 
     // popup var
     var in_text, text_svg,
-    value_text = opt.value_text != null
-    ? " "+opt.value_text : "",
+    value_text = opt.value_text,
     popup_background = opt.popup_background_color,
     popup_opacity = opt.popup_background_opacity,
     leave_timer, is_label_visible = false,
@@ -1675,12 +1721,14 @@ function drawSpider(widget) {
                                         transform: 's1.8',
                                         fill: color[fun]
                                     });
-                                    label[fun+2].attr({
-                                        text: labels[index],
-                                        fill: color[fun],
-                                        opacity: 1,
-                                        y: ly
-                                    });
+                                    if (label[fun+2] != null) {
+                                        label[fun+2].attr({
+                                            text: labels[index],
+                                            fill: color[fun],
+                                            opacity: 1,
+                                            y: ly
+                                        });
+                                    }
                                 } else {
                                     animator.handleCustom(shape[fun], {
                                         event_duration: 200,

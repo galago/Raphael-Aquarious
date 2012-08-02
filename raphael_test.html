@@ -8,6 +8,8 @@
         <script src="raphael.primitives.js" type="text/javascript" charset="utf-8"></script>
         <script src="raphael-aquarious.js" type="text/javascript" charset="utf-8"></script>
         <script src="popup.js" type="text/javascript" charset="utf-8"></script>
+        <!-- jquery not needed -->
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
         <script type="text/javascript" charset="utf-8">
             window.onload = function () {
 
@@ -41,6 +43,45 @@
                     spider4.updateValue([[getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)],
                         [getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7),getRandomInt(0,7)]])
                     spider5.updateValue([getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]);
+                }
+
+                asyncEventPause = function() {
+                    counter1.pause();
+                    counter2.pause();
+                    counter3.pause();
+                    gauge1.pause();
+                    gauge2.pause();
+                    gauge3.pause();
+                    thermometer1.pause();
+                    thermometer2.pause();
+                    chart1.pause();
+                    chart2.pause();
+                    chart3.pause();
+                    chart4.pause();
+                    chart5.pause();
+                    spider2.pause();
+                    spider3.pause();
+                    spider4.pause();
+                    spider5.pause();
+                }
+                asyncEventResume = function() {
+                    counter1.resume();
+                    counter2.resume();
+                    counter3.resume();
+                    gauge1.resume();
+                    gauge2.resume();
+                    gauge3.resume();
+                    thermometer1.resume();
+                    thermometer2.resume();
+                    chart1.resume();
+                    chart2.resume();
+                    chart3.resume();
+                    chart4.resume();
+                    chart5.resume();                    
+                    spider2.resume();
+                    spider3.resume();
+                    spider4.resume();
+                    spider5.resume();
                 }
 
                 // Counters
@@ -91,6 +132,9 @@
                     value: 0.85,
                     has_animation: true
                 });
+                
+                setTimeout("gauge2.pause()", 0);
+                
                 gauge3 = new Widget({
                     type: "gauge",
                     id_holder: "holder_gauge3",
@@ -100,9 +144,8 @@
                     event_duration: 500,
                     has_caption: false
                 });
-
-
-                //thermometer = createBar(bar_paper, 32, 5, 900);
+               
+                
                 thermometer1 = new Widget({
                     type: "thermometer",
                     id_holder: "holder_thermometer1",
@@ -126,17 +169,17 @@
                 r_height = 300;
                 r_width = 1000;
 
-                graph1 = new Widget({
-                    type: "graph",
-                    id_holder: "holder_graph1",
+                chart1 = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart1",
                     width: r_width,
                     height: r_height,
                     value: [{x:2005, y:25},{x:2006, y:35},{x:2007, y:68},{x:2008, y:89},{x:2009, y:160},{x:2010, y:405},{x:2011, y:952}]
                 });
 
-                graph2 = new Widget({
-                    type: "graph",
-                    id_holder: "holder_graph2",
+                chart2 = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart2",
                     width: 300,
                     height: 300,
                     value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
@@ -148,9 +191,9 @@
                     has_animation: false
                 });
 
-                graph3 = new Widget({
-                    type: "graph",
-                    id_holder: "holder_graph3",
+                chart3 = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart3",
                     width: 900,
                     height: 250,
                     value: [[{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}]],
@@ -164,9 +207,9 @@
                     event_duration: 50
                 });
 
-                graph4 = new Widget({
-                    type: "graph",
-                    id_holder: "holder_graph4",
+                chart4 = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart4",
                     width: r_width,
                     height: r_height,
                     value: [[{x:2005, y:961 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}],
@@ -177,13 +220,13 @@
                     function_dot_width: 7,
                     function_line_colors:["#288DFA","#FA2B28"],
                     function_line_colors:["#3494FA","#FA3834"],
-                    popup_background: "#999",
+                    popup_background_color: "#999",
                     no_fill: true
                 });
 
-                graph5 = new Widget({
-                    type: "graph",
-                    id_holder: "holder_graph5",
+                chart5 = new Widget({
+                    type: "line_chart",
+                    id_holder: "holder_line_chart5",
                     width: r_width,
                     height: r_height,
                     value: [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
@@ -202,11 +245,11 @@
 
 
 
-                //                graph_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
+                //                chart_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
                 //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
                 //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
                 //                                [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]];
-                //                graph = create2AxisGraph (graph_paper43, 800, 300, graph_values, {
+                //                chart = create2AxisGraph (chart_paper43, 800, 300, chart_values, {
                 //                    financial_mode: true,
                 //                    financial_max: 500,
                 //                    function_line_width: 9,
@@ -217,9 +260,7 @@
                 //                    interval: 600
                 //                });
 
-                graph_values = [{x:2005, y:26001 },{x:2006, y:23},{x:2007, y:5012222},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}];
-                //graph = create2AxisGraph (graph_paper23, 800, 300, graph_values, {financial_mode: true, financial_max: 500});
-
+                chart_values = [{x:2005, y:26001 },{x:2006, y:23},{x:2007, y:5012222},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}];                
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
                     "Financiación\nPersonal",
@@ -363,11 +404,11 @@
         <div id="holder_thermometer1"></div>
         <div id="holder_thermometer2"></div>
 
-        <div id="holder_graph1"></div>
-        <div id="holder_graph2"></div>
-        <div id="holder_graph3"></div>
-        <div id="holder_graph4"></div>
-        <div id="holder_graph5"></div>
+        <div id="holder_line_chart1"></div>
+        <div id="holder_line_chart2"></div>
+        <div id="holder_line_chart3"></div>
+        <div id="holder_line_chart4"></div>
+        <div id="holder_line_chart5"></div>
 
         <div id="holder_spider1"></div>
         <div id="holder_spider2"></div>
@@ -379,6 +420,10 @@
             <input id="inputValue" type="text" placeholder="type new value and try!">
             <button onkeypress="var key = (document.all) ? event.keyCode : event.which; if (key==13) asyncEvent()" onmouseup="asyncEvent()">try!</button>
             <button onmouseup="asyncEventRandom()">Random Values</button>
+            <br>
+            <button onmouseup="asyncEventPause()">Freeze!</button>
+            <button onmouseup="asyncEventResume()">Defrost da thing</button>
+
         </div>
     </body>
 </html>
