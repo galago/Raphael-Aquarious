@@ -9,7 +9,7 @@
         <script src="raphael-aquarious.js" type="text/javascript" charset="utf-8"></script>
         <script src="popup.js" type="text/javascript" charset="utf-8"></script>
         <!-- jquery not needed -->
-        <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+        <!--        <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>-->
         <script type="text/javascript" charset="utf-8">
             window.onload = function () {
 
@@ -37,11 +37,13 @@
                     gauge3.updateValue(Math.random());
                     thermometer1.updateValue(getRandomInt(0,31));
                     thermometer2.updateValue(getRandomInt(0,19));
-//                    chart1.updateValue();
-//                    chart2.updateValue();
-                    chart3.updateValue([[{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}]]);
-//                    chart4.updateValue();
-//                    chart5.updateValue();                    
+                    //                    chart1.updateValue();
+                    //                    chart2.updateValue();
+                    chart3.updateValue([[{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}],
+                        [{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}]]);
+                    chart4.updateValue([[{x:2005, y:getRandomInt(0,3000) },{x:2006, y:getRandomInt(0,3000)},{x:2007, y:getRandomInt(0,3000)},{x:2008, y:getRandomInt(0,3000)},{x:2009, y:getRandomInt(0,3000)},{x:2010, y:getRandomInt(0,3000)},{x:2011, y:getRandomInt(0,3000)}],
+                        [{x:2005, y:getRandomInt(0,3000) },{x:2006, y:getRandomInt(0,3000)},{x:2007, y:getRandomInt(0,3000)},{x:2008, y:getRandomInt(0,3000)},{x:2009, y:getRandomInt(0,3000)},{x:2010, y:getRandomInt(0,3000)},{x:2011, y:getRandomInt(0,3000)}]]);
+                    //                    chart5.updateValue();
                     spider2.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
                         [getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)]]);
                     spider3.updateValue([getRandomInt(0,8),getRandomInt(0,8),getRandomInt(0,8)]);
@@ -82,7 +84,7 @@
                     chart2.resume();
                     chart3.resume();
                     chart4.resume();
-                    chart5.resume();                    
+                    chart5.resume();
                     spider2.resume();
                     spider3.resume();
                     spider4.resume();
@@ -137,9 +139,9 @@
                     value: 0.85,
                     has_animation: true
                 });
-                
+
                 setTimeout("gauge2.pause()", 0);
-                
+
                 gauge3 = new Widget({
                     type: "gauge",
                     id_holder: "holder_gauge3",
@@ -149,8 +151,8 @@
                     event_duration: 500,
                     has_caption: false
                 });
-               
-                
+
+
                 thermometer1 = new Widget({
                     type: "thermometer",
                     id_holder: "holder_thermometer1",
@@ -212,17 +214,18 @@
                 chart3 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart3",
-                    width: 900,
+                    width: 400,
                     height: 250,
-                    value: [[{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}]],
+                    value: [[{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}],
+                        [{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}]],
                     value_text: "impago",
-                    function_line_width:8,
-                    function_dot_width:7,
-                    function_line_colors:["#FA3834","#3494FA"],
+                    function_line_width:3,
+                    function_dot_width:4,
+                    function_line_colors:["#3494FA","#FA3834"],
                     popup_background_color:"#E0E0E0",
                     no_fill: true,
-                    delay: 2000,
-                    event_duration: 50
+                    delay: 1000,
+                    event_duration: 400
                 });
 
                 chart4 = new Widget({
@@ -239,14 +242,14 @@
                     function_line_colors:["#288DFA","#FA2B28"],
                     function_line_colors:["#3494FA","#FA3834"],
                     popup_background_color: "#999",
-                    no_fill: false
+                    no_fill: true
                 });
 
                 chart5 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart5",
                     width: r_width,
-                    height: r_height,
+                    height: r_height+120,
                     value: [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
                         [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
                         [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]],
@@ -278,7 +281,7 @@
                 //                    interval: 600
                 //                });
 
-                chart_values = [{x:2005, y:26001 },{x:2006, y:23},{x:2007, y:5012222},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}];                
+                chart_values = [{x:2005, y:26001 },{x:2006, y:23},{x:2007, y:5012222},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}];
                 spider_labels = ["Alquileres",
                     "Financiación\nEmpresarial",
                     "Financiación\nPersonal",
