@@ -37,11 +37,13 @@
                     gauge3.updateValue(Math.random());
                     thermometer1.updateValue(getRandomInt(0,31));
                     thermometer2.updateValue(getRandomInt(0,19));
+                    bar_chart1.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart2.updateValue([{x:2005, y:getRandomInt(0,11)},{x:2006, y:getRandomInt(0,11)},{x:2007, y:getRandomInt(0,11)},{x:2008, y:getRandomInt(0,11)},{x:2009, y:getRandomInt(0,11)},{x:2010, y:getRandomInt(0,11)},{x:2011, y:getRandomInt(0,11)}]);
                     //                    chart1.updateValue();
                     //                    chart2.updateValue();
-                    chart3.updateValue([[{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}],
+                    line_chart3.updateValue([[{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}],
                         [{x:2005, y:getRandomInt(0,6)},{x:2006, y:getRandomInt(0,6)},{x:2007, y:getRandomInt(0,6)},{x:2008, y:getRandomInt(0,6)},{x:2009, y:getRandomInt(0,6)},{x:2010, y:getRandomInt(0,6)},{x:2011, y:getRandomInt(0,6)}]]);
-                    chart4.updateValue([[{x:2005, y:getRandomInt(0,3000) },{x:2006, y:getRandomInt(0,3000)},{x:2007, y:getRandomInt(0,3000)},{x:2008, y:getRandomInt(0,3000)},{x:2009, y:getRandomInt(0,3000)},{x:2010, y:getRandomInt(0,3000)},{x:2011, y:getRandomInt(0,3000)}],
+                    line_chart4.updateValue([[{x:2005, y:getRandomInt(0,3000) },{x:2006, y:getRandomInt(0,3000)},{x:2007, y:getRandomInt(0,3000)},{x:2008, y:getRandomInt(0,3000)},{x:2009, y:getRandomInt(0,3000)},{x:2010, y:getRandomInt(0,3000)},{x:2011, y:getRandomInt(0,3000)}],
                         [{x:2005, y:getRandomInt(0,3000) },{x:2006, y:getRandomInt(0,3000)},{x:2007, y:getRandomInt(0,3000)},{x:2008, y:getRandomInt(0,3000)},{x:2009, y:getRandomInt(0,3000)},{x:2010, y:getRandomInt(0,3000)},{x:2011, y:getRandomInt(0,3000)}]]);
                     //                    chart5.updateValue();
                     spider2.updateValue([[getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6),getRandomInt(0,6)],
@@ -176,7 +178,35 @@
                 r_height = 300;
                 r_width = 1000;
 
-                chart1 = new Widget({
+                bar_chart1 = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart1",
+                    width: r_width,
+                    height: r_height,
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}]
+                });
+                bar_chart2 = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart2",
+                    width: r_width/2,
+                    height: r_height,
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    function_line_colors:["#5398C1"]
+                });
+                bar_chart3 = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart3",
+                    width: 300,
+                    height: 300,
+                    value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
+                    function_line_colors:["#FF3300"],
+                    popup_background_color:"#E0E0E0",
+                    no_fill: false,
+                    has_animation: false
+                });
+                
+                
+                line_chart1 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart1",
                     width: r_width,
@@ -184,7 +214,7 @@
                     value: [{x:2005, y:25},{x:2006, y:35},{x:2007, y:68},{x:2008, y:89},{x:2009, y:160},{x:2010, y:405},{x:2011, y:952}]
                 });
 
-                chart2 = new Widget({
+                line_chart2 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart2",
                     width: 300,
@@ -197,7 +227,7 @@
                     no_fill: false,
                     has_animation: false
                 });
-                chart2_large = new Widget({
+                line_chart2_large = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart2_large",
                     width: 900,
@@ -211,7 +241,7 @@
                     has_animation: false
                 });
 
-                chart3 = new Widget({
+                line_chart3 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart3",
                     width: 400,
@@ -228,7 +258,7 @@
                     event_duration: 400
                 });
 
-                chart4 = new Widget({
+                line_chart4 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart4",
                     width: r_width,
@@ -245,7 +275,7 @@
                     no_fill: true
                 });
 
-                chart5 = new Widget({
+                line_chart5 = new Widget({
                     type: "line_chart",
                     id_holder: "holder_line_chart5",
                     width: r_width,
@@ -266,11 +296,11 @@
 
 
 
-                //                chart_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
+                //                line_chart_values = [[{x:2005, y:961 },{x:2006, y:23},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:0}],
                 //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
                 //                                [{x:2005, y:23 },{x:2006, y:533},{x:2007, y:1012},{x:2008, y:123},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:300}],
                 //                                [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]];
-                //                chart = create2AxisGraph (chart_paper43, 800, 300, chart_values, {
+                //                line_chart = create2AxisGraph (chart_paper43, 800, 300, chart_values, {
                 //                    financial_mode: true,
                 //                    financial_max: 500,
                 //                    function_line_width: 9,
@@ -425,6 +455,11 @@
         <div id="holder_thermometer1"></div>
         <div id="holder_thermometer2"></div>
 
+        <div id="holder_bar_chart1"></div>        
+        <div id="holder_bar_chart2"></div>        
+        <div id="holder_bar_chart3"></div>        
+        <div id="holder_bar_chart4"></div>        
+        
         <div id="holder_line_chart1"></div>
         <div id="holder_line_chart2"></div>
         <div id="holder_line_chart2_large"></div>

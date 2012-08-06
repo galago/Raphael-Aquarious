@@ -440,9 +440,7 @@ function Options(options) {
                 this.financial_max = options.financial_max != null ? options.financial_max : -1;
                 this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
-                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
-                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
-                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                this.function_bar_colors = options.function_line_colors != null ? options.function_line_colors : null;
                 break;
             case "lineChart":
                 this.type = "line_chart";
@@ -904,37 +902,395 @@ function drawThermometer(widget) {
     return widget;
 }
 
-// TODO
+
+
+
+/**
+ *  Draw a x,y axis chart. X axis accept continous values, not Y axis.
+ *
+ *  TODO async update
+ *
+ *  Options available:
+ *
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have) | monofunction - array with pairs {x,y} which represent
+ *                                           the values of the chart function.
+ *                              OR
+ *                            multifunction - array of arrays which represent multiple
+ *                                            chart functions, each one composed of pairs {x,y}.
+ *      - has_animation
+ *      - delay
+ *      - event_duration    | milliseconds between each pair {x,y} is drawn
+ *      - easing
+ *
+ *
+ *      Custom:
+ *      - financial_mode       | if true the chart will be formatted with monetary format
+ *                               in proportional hops (500,1000,5000,10000...) as ceiling of X axis.
+ *                               default false
+ *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
+ *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - function_line_width  | The width in pixels of the chart function line(s)
+ *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
+ *      - popup_background     | The color code of the popup background
+ *      - popup_opacity        | The opacity 0-1 of the popup background
+ *
+ *  @return the widget object
+ *
+ *  @author Hal9000
+ */
 function drawBarChart (widget) {
     // default
-    var bar_chart = widget.svg,
+    var chart = widget.svg,
     paper = widget.paper,
     opt = widget.options,
     width = opt.width,
     height = opt.height,
-    values = opt.value,
+    values = new Array(opt.value);
+
+    if (opt.event_duration==0) opt.event_duration = 600;
+    if (opt.delay==0) opt.delay = 100;
+    var animator = new AnimationAbstraction(opt);
+    var accumulated_delay = opt.delay, event_duration = chart == null ? opt.event_duration : 0;
+
     // cutsom
-    chart_type = opt.chart_type;
+    //    var chart_type = opt.chart_type;
+    //
+    //    var chart_width,
+    //    chart_height,
+    //    bar_thickness = "variable segun el numero de valores";
+    //
+    //    if (chart_type == 'V') {
+    //        bar_width = bar_thickness;
+    //        bar_height = 0;
+    //    }
+    //    else if (chart_type == 'H') {
+    //        bar_width = 0;
+    //        bar_height = bar_thickness;
+    //    } else return;
 
-    var chart_width,
+    // Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+
+
+    var i, x, y, y_value, aux_value,
+    x_chart,
+    y_chart = 20,
+    x_margin = 10,
+    y_margin = 25,
+    chart_width,
     chart_height,
-    bar_x,
-    bar_y,
+    // TODO ahora mismo no se usa ya que toma los valores de x de la primera funcion
+    // esta listo para usarse en el bucle principal.
+    values_x = [],
+    fun,
+    fun_aux,
+    financial_mode = opt.financial_mode,
+    financial_min = 500,
+    financial_max = opt.financial_max,
+    max_x = 0,
+    max_y = 0,
+    min_y = 0,
+    base = 1,
+    ceiling,
+    gaps_y,
+    gaps_x,
+    gaps_x_frequency,
     bar_width,
-    bar_height,
-    bar_thickness = "variable segun el numero de valores";
+    bars = [],
+    x_aux = [],
+    y_aux = [],
+    path_string = [],
+    path_string_fill,
+    bar_stroke_width = .2,
+    function_bar_width = opt.function_bar_width,
+    color = opt.function_bar_colors ? opt.function_bar_colors : new Array(Aquarious.color),
+    over_areas = [],
+    over_rect_length,
+    parallel_set = paper.set();
 
-    if (chart_type == 'V') {
-        bar_width = bar_thickness;
-        bar_height = 0;
+    // popup var
+    var in_text,
+    value_text = opt.value_text,
+    popup_background = opt.popup_background_color,
+    popup_opacity = opt.popup_background_opacity,
+    leave_timer, is_label_visible = false,
+    popup_label,
+    popup_frame;
+    if (chart == null) {
+        popup_label = paper.set();
+        popup_label.push(paper.text(60, 12, "x_value").attr(Aquarious.txt));
+        y=30;
+        for (i=0;i<values.length;i++) {
+            popup_label.push(paper.text(60, y, "y_value#i").attr(Aquarious.txt1).attr({
+                fill: color[0],
+                "font-weight": "bold"
+            }));
+            y+=15;
+        }
+        popup_label.hide();
+        popup_frame = paper.popup(100, 100, popup_label, "right").attr({
+            fill: popup_background,
+            stroke: "#666",
+            "stroke-width": 2,
+            "fill-opacity": popup_opacity
+        }).hide();
+    } else {
+        popup_label = chart.popup_label;
+        popup_frame = chart.popup_frame;
     }
-    else if (chart_type == 'H') {
-        bar_width = 0;
-        bar_height = bar_thickness;
-    } else return;
+    // UI labels
+    switch (Aquarious.lang_ui) {
+        case "ES":
+            in_text = " en";
+            break;
+        default:
+            in_text = " in";
+    }
 
-// Para todas los valores creamos una barra de tamanio 0 que ira creciendo segun sea su valor
+    // Calculating the maximum values based in the input values and widen
+    // Fill the array with all the possible values of the X axis
+    for (fun=0;fun<values.length;fun++) {
+        for (i=0;i<values[fun].length;i++) {
+            if (max_x < values[fun][i].x) max_x = values[fun][i].x;
+            if (max_y < values[fun][i].y) max_y = values[fun][i].y;
+            if (min_y > values[fun][i].y) min_y = values[fun][i].y;
+            if (!inArray(values_x,values[fun][i].x)) values_x.push(values[fun][i].x);
+        }
+    }
+    values_x.sort();
 
+
+    // If the chart is in monetary values mode, the maximum range will be predefined
+    // to have a consistent look&feel
+    if (financial_mode) {
+        gaps_y = 5;
+        if (max_y > 0) base = Math.floor(Math.log(max_y)/Math.log(10));
+        ceiling = (max_y < financial_min) ? financial_min : Math.pow(10,base)*5;
+        if (financial_max > -1 && ceiling >= financial_max) {
+            ceiling = Math.pow(10,base);
+            while (max_y >= ceiling) ceiling+=Math.pow(10,base);
+        //while (max_y >= ceiling) ceiling+=Math.pow(10,base-1)*5;
+        }
+        else {
+            if (max_y >= ceiling) ceiling*=2;
+        }
+    }
+    // In the rest of cases, the ceiling will have a margin of 20% above the max value
+    else {
+        gaps_y = 6;
+        ceiling = (max_y == 0) ? 6:Math.ceil(max_y*1.2);
+        while((typeof((ceiling/gaps_y))=='number') && ((ceiling/gaps_y).toString().indexOf('.')!=-1)) ceiling++;
+    }
+
+
+    //console.log("old_ceiling="+(chart==null ? "undefined":chart.ceiling) +" new_ceiling="+ceiling);
+    // if max_y changes on update, redraw the whole chart, else update the bars with new values
+    if (chart != null) {
+        if(ceiling > chart.ceiling) {
+            widget.svg = null;
+            paper.clear();
+            //console.log("REDRAW!\n\n");
+            return drawBarChart(widget);
+        }
+        else if (ceiling < chart.ceiling) {
+            ceiling = chart.ceiling;
+        }
+    }
+
+    // Draw the chart coordinate axis and labels
+    x_margin = x_margin*(String(ceiling).length);
+    x_chart = x_margin+12;
+    chart_width = width - x_chart;
+    chart_height = height - 60;
+    aux_value = gaps_y;
+    over_rect_length = width/values_x.length;
+    // Draw the values of the Y axis
+    for (i=0;i<=gaps_y;i++) {
+        y = y_chart + chart_height/gaps_y*i;
+        // Value labels of Y axis
+        if (chart == null) {
+            paper.text(x_margin,y,formatCurrency((ceiling/gaps_y*aux_value--),'',Aquarious.thousands,Aquarious.decimal,false)).attr(Aquarious.txt2).attr({
+                "text-anchor": "end"
+            });
+            // Reference bars of Y axis
+            paper.path("M"+x_chart+" "+y+"H"+(width)).attr({
+                "stroke-width": bar_stroke_width
+            });
+        }
+    }
+    // y = graph floor
+
+    // Leave a 5% width to each side to leave "air" between the values and the end of the canvas  _|__chart_width__|_
+    chart_width -= chart_width*.10;
+    // Calculates the number of reference values of X axis depending in the amount of values,
+    // the size of the graphic and the length of the reference string. (a char 14px its 7.5px average)
+    gaps_x = Math.floor(chart_width / (values_x[values_x.length-1].toString().length*10));
+    if (gaps_x > values_x.length) gaps_x = values_x.length;
+    gaps_x_frequency = Math.ceil(values_x.length / gaps_x);
+
+    // retrieve widget objects if there are
+    if (chart != null) {
+        over_areas = chart.over_areas;
+        bars = chart.bars;
+    }
+
+    // Drar reference marks of X axis as well as the bars of the bar chart based on the input values
+    for (fun=0;fun<values.length;fun++) {
+        if (chart == null) {
+            bars[fun] = [];
+            over_areas[fun] = [];
+        }
+
+        x = x_chart + chart_width*.05 - chart_width/(values[fun].length-1);
+
+        for (i=0;i<values[fun].length;i++) {
+            x += chart_width/(values[fun].length-1);
+            bar_width = chart_width/2/(values[fun].length-1);
+            //x = x_chart + chart_width/values[fun].length*i + x_margin;
+            // The first iteration draws the X axis
+            if (fun == 0 && chart == null) {
+                // If there are many different values, it doesn't draw all the reference marks for minimalistic issues
+                if (i%gaps_x_frequency == 0) {
+                    paper.text(x,y+y_margin,values[fun][i].x).attr(Aquarious.txt2);
+                    paper.path(Raphael.format("M{0} {1}V{2}", x, y+8, chart_height+20)).attr({
+                        "stroke-width": bar_stroke_width
+                    });
+                }
+            }
+            // Draw the chart function bars or updates them
+            y_value = y_chart + Math.abs(chart_height - (chart_height/ceiling)*values[fun][i].y);
+
+            path_string[i] = "M"+x+" "+y_value+" L";
+            if (chart == null) {
+                //bars[fun][i] = paper.path(path_string[i]).attr({
+                bars[fun][i] = paper.rect(x-bar_width/2,y,bar_width,0).attr({
+                    stroke: color[fun],
+                    fill: color[fun],                    
+                    "stroke-width" : function_bar_width,
+                    "stroke-linejoin": "round",
+                    transform: "r180"
+                });    
+            }
+            animator.handleCustom(bars[fun][i], {
+                event_duration: opt.event_duration - 300,
+                delay: accumulated_delay - 200
+            }, {
+                height: y-y_value
+            });
+         
+
+            x_aux[i] = x;
+            y_aux[i] = y_value;
+
+            // Calcula las coordenadas del relleno para crear el path tras obetener todos los puntos
+            if (i == 0) path_string_fill = "M"+x+" "+y+" L"+x+" "+y_value;
+            else path_string_fill += " "+x+" "+y_value;
+
+
+            // Draw a transparent rectangle to handle hover events
+            if (chart == null) {
+                over_areas[fun][i] = paper.rect(x-(over_rect_length/2), y_margin, over_rect_length, chart_height)
+                .attr({
+                    stroke: "none",
+                    fill: color[fun],
+                    "fill-opacity": 0
+                });
+
+            }
+
+            accumulated_delay+=event_duration;
+
+
+            if (chart == null) {
+                if (fun == 0 && i==0) {
+                    function over_events (x, y, index, fun_index) {
+                        over_areas[fun_index][i].mouseover(function() {
+                            var i, fun, lx, ly, ppp, anim;
+                            clearTimeout(leave_timer);
+                            if (financial_mode)
+                                popup_label[0].attr({
+                                    text: formatCurrency(values[fun_index][index].y,Aquarious.currency,Aquarious.thousands,Aquarious.decimal,false)
+                                });
+                            else
+                                popup_label[0].attr({
+                                    text: values[fun_index][index].y + value_text + (value_text != "" && values[fun_index][index].y != 1 ? "s" : "") + in_text
+                                });
+                            popup_label[1].attr({
+                                text: values[fun_index][index].x,
+                                fill: color[fun_index]
+                            });
+                            // Si se solapan lineas o puntos se gestionan para su correcta visualizacion
+                            ly = 45;
+
+                            // Dibuja el popup balloon
+                            var side = "top";                            
+                            if (Math.abs(y-chart_height) + popup_frame.getBBox().height > chart_height) { 
+                                side = "bottom";
+                            }
+                            ppp = paper.popup(x, y, popup_label, side, 1);
+                            anim = Raphael.animation({
+                                path: ppp.path,
+                                transform: ["t", ppp.dx, ppp.dy]
+                            }, 250 * is_label_visible);
+                            // Calcula las nuevas coordeandas de los elementos del popup
+                            lx = popup_label[0].transform()[0][1] + ppp.dx;
+                            ly = popup_label[0].transform()[0][2] + ppp.dy;
+                            popup_frame.show().stop().animate(anim);
+
+                            for (i=0;i<popup_label.length;i++) {
+                                popup_label[i].show().stop().animateWith(popup_frame, anim, {
+                                    transform: ["t", lx, ly]
+                                }, 250 * is_label_visible);
+                            }
+                            is_label_visible = true;
+                        });
+                        over_areas[fun_index][i].mouseout(function() {
+                            for (var i=1;i<values.length;i++) {
+                                popup_label[i+1].attr({
+                                    opacity: 0
+                                });
+                            }
+                            leave_timer = setTimeout(function () {
+                                popup_frame.hide();
+                                popup_label.hide();
+                                is_label_visible = false;
+                            }, 1);
+                        });
+                    };
+                }                
+            }
+            else {
+                // Removes event handlers of older over_areas
+                over_areas[fun][i].unbindAll();
+
+            }
+            over_events(x, y_value, i, fun);            
+        }
+    }
+
+    // Traemos el popup al frente
+    popup_frame.toFront();
+    popup_label.toFront();
+    // Traemos las over areas al frente. Siempre tienen que ser los objetos mas al frente para no interferir con su cometido
+    for (fun=0;fun<over_areas.length;fun++) {
+        for (i=0;i<over_areas[fun].length;i++) {
+            over_areas[fun][i].toFront();
+        }
+    }
+
+    chart = new Object();
+    chart.popup_label = popup_label;
+    chart.popup_frame = popup_frame;
+    chart.bars = bars;
+    chart.over_areas = over_areas;
+    chart.ceiling = ceiling;
+
+    widget.svg = chart;
+    return widget;
 }
 
 
@@ -1055,7 +1411,7 @@ function drawLineChart (widget) {
             y+=15;
         }
         popup_label.hide();
-        var popup_frame = paper.popup(100, 100, popup_label, "right").attr({
+        popup_frame = paper.popup(100, 100, popup_label, "right").attr({
             fill: popup_background,
             stroke: "#666",
             "stroke-width": 2,
@@ -1460,16 +1816,16 @@ function drawLineChart (widget) {
                                         ly+=15;
 
                                     } else {
-//                                        lines_set[fun].forEach(function (line) {
-//                                            animator.handleCustom(line, {
-//                                                event_duration: 200,
-//                                                delay: 0,
-//                                                easing: '>'
-//                                            }, {
-//                                                opacity: 0.2
-//                                            });
-//                                        });                                        
-                                    }
+                                //                                        lines_set[fun].forEach(function (line) {
+                                //                                            animator.handleCustom(line, {
+                                //                                                event_duration: 200,
+                                //                                                delay: 0,
+                                //                                                easing: '>'
+                                //                                            }, {
+                                //                                                opacity: 0.2
+                                //                                            });
+                                //                                        });
+                                }
                                 }
                             }
                             // Dibuja el popup balloon
@@ -1510,7 +1866,7 @@ function drawLineChart (widget) {
                                 is_label_visible = false;
                             }, 1);
                         });
-                    };
+                    }
                 }
             }
             else {
