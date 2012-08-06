@@ -139,7 +139,9 @@
                     width: 400,
                     height: 200,
                     value: 0.85,
-                    has_animation: true
+                    label: "(bounce)",
+                    has_animation: true,
+                    easing: 'bounce'
                 });
 
                 setTimeout("gauge2.pause()", 0);
@@ -163,7 +165,8 @@
                     levels: 32,
                     value: 19,
                     event_duration: 3000,
-                    delay: 0
+                    delay: 0,
+                    easing: 'backOut'
                 });
                 thermometer2 = new Widget({
                     type: "thermometer",
@@ -183,7 +186,8 @@
                     id_holder: "holder_bar_chart1",
                     width: r_width,
                     height: r_height,
-                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}]
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    easing: 'backOut'
                 });
                 bar_chart2 = new Widget({
                     type: "bar_chart",
@@ -191,7 +195,9 @@
                     width: r_width/2,
                     height: r_height,
                     value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
-                    function_line_colors:["#5398C1"]
+                    function_line_colors:["#5398C1"],
+                    event_duration: 1500,
+                    easing: 'elastic'
                 });
                 bar_chart3 = new Widget({
                     type: "bar_chart",
@@ -211,7 +217,8 @@
                     id_holder: "holder_line_chart1",
                     width: r_width,
                     height: r_height,
-                    value: [{x:2005, y:25},{x:2006, y:35},{x:2007, y:68},{x:2008, y:89},{x:2009, y:160},{x:2010, y:405},{x:2011, y:952}]
+                    value: [{x:2005, y:25},{x:2006, y:35},{x:2007, y:68},{x:2008, y:89},{x:2009, y:160},{x:2010, y:405},{x:2011, y:952}],
+                    easing: '>'
                 });
 
                 line_chart2 = new Widget({
