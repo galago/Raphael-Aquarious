@@ -438,12 +438,12 @@ function Options(options) {
             case "bar_chart":
                 this.financial_mode = options.financial_mode != null ? options.financial_mode : false;
                 this.financial_max = options.financial_max != null ? options.financial_max : -1;
-                this.value_text = options.value_text != null ? " "+options.value_text : "";
-                this.no_fill = options.no_fill != null ? options.no_fill : false;
+                this.value_text = options.value_text != null ? " "+options.value_text : "";                
                 this.bar_colors = options.line_colors != null ? options.line_colors : null;
                 this.bar_opacity = options.bar_opacity != null ? options.bar_opacity : 1;
                 this.bar_rounded_radius = options.bar_rounded_radius != null ? options.bar_rounded_radius : 0;
                 this.bar_top_cap = options.bar_top_cap != null ? options.bar_top_cap : false;
+                this.bar_gap = options.bar_gap != null ? options.bar_gap : 'medium';
                 break;
             case "lineChart":
                 this.type = "line_chart";
@@ -934,9 +934,11 @@ function drawThermometer(widget) {
  *                               in proportional hops (500,1000,5000,10000...) as ceiling of X axis.
  *                               default false
  *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
- *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - line_width  | The width in pixels of the chart function line(s)
+        - bar_colors           | hex The bar fill colors
+        - bar_opacity          | 0-1 the opacity of the bar fills
+        - bar_rounded_radius   | The bar rounded radius in px
+        - bar_top_cap          | true||false if the bar will have a top cap in the style of google analytics, need a bar_opacity value to see the effect
+        - bar_gap              | The gap between bars - 'none', 'small', 'medium', 'large'
  *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
@@ -1008,7 +1010,9 @@ function drawBarChart (widget) {
     path_string = [],
     path_string_fill,
     ref_line_stroke_width = .2,
-    bar_width = opt.bar_width,
+    bar_width,   
+    bar_gap_width, 
+    bar_gap_type = opt.bar_gap,
     bar_opacity = opt.bar_opacity,
     bar_rounded_radius = opt.bar_rounded_radius,
     has_bar_top_cap = opt.bar_top_cap,
@@ -1153,11 +1157,31 @@ function drawBarChart (widget) {
             over_areas[fun] = [];
         }
 
-        x = x_chart + chart_width*.05 - chart_width/(values[fun].length-1);
+        x = x_chart + chart_width*.03 - chart_width/(values[fun].length);
+        bar_gap_width = (chart_width+chart_width*.03)/(values[fun].length);
+        switch (bar_gap_type) { 
+            case 'none':
+                // bar_width 100% - gap_width 0%
+                bar_width = bar_gap_width;                
+                break;
+            case 'small':
+                // bar_width 80% - gap_width 20%
+                bar_width = bar_gap_width * .8;                
+                break;
+            case 'large':
+                // bar_width 40% - gap_width 60%
+                bar_width = bar_gap_width * .4;                
+                break;
+            case 'medium':
+            default:
+                // bar_width 60% - gap_width 40%
+                bar_width = bar_gap_width * .6;                
+        }
+        //bar_width = chart_width/2/(values[fun].length-1);        
+        x += bar_gap_width/2;
 
         for (i=0;i<values[fun].length;i++) {
-            x += chart_width/(values[fun].length-1);
-            bar_width = chart_width/2/(values[fun].length-1);
+            x += bar_gap_width;
             //x = x_chart + chart_width/values[fun].length*i + x_margin;
             // The first iteration draws the X axis
             if (fun == 0 && chart == null) {
@@ -1172,7 +1196,7 @@ function drawBarChart (widget) {
             // Draw the chart bars or updates them
             y_value = y_chart + Math.abs(chart_height - (chart_height/ceiling)*values[fun][i].y);
             path_string[i] = "M"+x+" "+y_value+" L";
-            if (chart == null) {                
+            if (chart == null) {
                 bars[fun][i] = paper.rect(x-bar_width/2, y, bar_width, 0, bar_rounded_radius).attr({
                     "stroke-width" : 0,
                     fill: color[fun],

@@ -38,7 +38,10 @@
                     thermometer1.updateValue(getRandomInt(0,31));
                     thermometer2.updateValue(getRandomInt(0,19));
                     bar_chart1.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
-                    bar_chart1_alt.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart1_gap_none.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart1_gap_small.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart1_gap_medium.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart1_gap_large.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
                     bar_chart2.updateValue([{x:2005, y:getRandomInt(0,11)},{x:2006, y:getRandomInt(0,11)},{x:2007, y:getRandomInt(0,11)},{x:2008, y:getRandomInt(0,11)},{x:2009, y:getRandomInt(0,11)},{x:2010, y:getRandomInt(0,11)},{x:2011, y:getRandomInt(0,11)}]);
                     //                    chart1.updateValue();
                     //                    chart2.updateValue();
@@ -192,14 +195,52 @@
                     value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
                     easing: 'backOut'
                 });
-                bar_chart1_alt = new Widget({
+                bar_chart1_gap_none = new Widget({
                     type: "bar_chart",
-                    id_holder: "holder_bar_chart1_alt",
+                    id_holder: "holder_bar_chart1_gap_none",
                     width: r_width,
                     height: r_height,
                     bar_opacity: .4,
                     bar_top_cap: true,
+                    bar_gap: 'none',
                     value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    event_duration: 1500,
+                    easing: 'backOut'
+                });
+                bar_chart1_gap_small = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart1_gap_small",
+                    width: r_width,
+                    height: r_height,
+                    bar_opacity: .4,
+                    bar_top_cap: true,
+                    bar_gap: 'small',
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    event_duration: 1500,
+                    easing: 'backOut'
+                });
+                bar_chart1_gap_medium = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart1_gap_medium",
+                    width: r_width,
+                    height: r_height,
+                    bar_opacity: .4,
+                    bar_top_cap: true,
+                    bar_gap: 'medium',
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    event_duration: 1500,
+                    easing: 'backOut'
+                });
+                bar_chart1_gap_large = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart1_gap_large",
+                    width: r_width,
+                    height: r_height,
+                    bar_opacity: .4,
+                    bar_top_cap: true,
+                    bar_gap: 'large',
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    event_duration: 1500,
                     easing: 'backOut'
                 });
                 bar_chart2 = new Widget({
@@ -476,7 +517,10 @@
         <div id="holder_thermometer2"></div>
 
         <div id="holder_bar_chart1"></div>        
-        <div id="holder_bar_chart1_alt"></div>        
+        <div id="holder_bar_chart1_gap_none"></div>        
+        <div id="holder_bar_chart1_gap_small"></div>        
+        <div id="holder_bar_chart1_gap_medium"></div>        
+        <div id="holder_bar_chart1_gap_large"></div>        
         <div id="holder_bar_chart2"></div>        
         <div id="holder_bar_chart3"></div>        
         <div id="holder_bar_chart4"></div>        
