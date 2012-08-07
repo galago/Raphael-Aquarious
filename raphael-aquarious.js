@@ -440,7 +440,10 @@ function Options(options) {
                 this.financial_max = options.financial_max != null ? options.financial_max : -1;
                 this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
-                this.function_bar_colors = options.function_line_colors != null ? options.function_line_colors : null;
+                this.bar_colors = options.line_colors != null ? options.line_colors : null;
+                this.bar_opacity = options.bar_opacity != null ? options.bar_opacity : 1;
+                this.bar_rounded_radius = options.bar_rounded_radius != null ? options.bar_rounded_radius : 0;
+                this.bar_top_cap = options.bar_top_cap != null ? options.bar_top_cap : false;
                 break;
             case "lineChart":
                 this.type = "line_chart";
@@ -449,9 +452,9 @@ function Options(options) {
                 this.financial_max = options.financial_max != null ? options.financial_max : -1;
                 this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
-                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
-                this.function_line_width = options.function_line_width != null ? options.function_line_width : 4;
-                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 4;
+                this.line_colors = options.line_colors != null ? options.line_colors : null;
+                this.line_width = options.line_width != null ? options.line_width : 4;
+                this.dot_width = options.dot_width != null ? options.dot_width : 4;
                 break;
             case "spider":
                 if (options.labels != null && options.value != null && options.max_value != null ) {
@@ -460,9 +463,9 @@ function Options(options) {
                 } else throw "RaphaelAquarious[spider]: missing options";
                 this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
-                this.function_line_colors = options.function_line_colors != null ? options.function_line_colors : null;
-                this.function_line_width = options.function_line_width != null ? options.function_line_width : 6;
-                this.function_dot_width = options.function_dot_width != null ? options.function_dot_width : 8;
+                this.line_colors = options.line_colors != null ? options.line_colors : null;
+                this.line_width = options.line_width != null ? options.line_width : 6;
+                this.dot_width = options.dot_width != null ? options.dot_width : 8;
                 break;
             case "___template":
                 this._______ = options._______ != null ? options._______ : null;
@@ -932,9 +935,9 @@ function drawThermometer(widget) {
  *                               default false
  *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
  *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - function_line_width  | The width in pixels of the chart function line(s)
- *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - line_width  | The width in pixels of the chart function line(s)
+ *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
@@ -999,15 +1002,18 @@ function drawBarChart (widget) {
     gaps_y,
     gaps_x,
     gaps_x_frequency,
-    bar_width,
     bars = [],
     x_aux = [],
     y_aux = [],
     path_string = [],
     path_string_fill,
-    bar_stroke_width = .2,
-    function_bar_width = opt.function_bar_width,
-    color = opt.function_bar_colors ? opt.function_bar_colors : new Array(Aquarious.color),
+    ref_line_stroke_width = .2,
+    bar_width = opt.bar_width,
+    bar_opacity = opt.bar_opacity,
+    bar_rounded_radius = opt.bar_rounded_radius,
+    has_bar_top_cap = opt.bar_top_cap,
+    bars_top_caps = [],
+    color = opt.bar_colors ? opt.bar_colors : new Array(Aquarious.color),
     over_areas = [],
     over_rect_length,
     parallel_set = paper.set();
@@ -1118,7 +1124,7 @@ function drawBarChart (widget) {
             });
             // Reference bars of Y axis
             paper.path("M"+x_chart+" "+y+"H"+(width)).attr({
-                "stroke-width": bar_stroke_width
+                "stroke-width": ref_line_stroke_width
             });
         }
     }
@@ -1136,12 +1142,14 @@ function drawBarChart (widget) {
     if (chart != null) {
         over_areas = chart.over_areas;
         bars = chart.bars;
+        bars_top_caps = chart.bars_top_caps;
     }
 
     // Drar reference marks of X axis as well as the bars of the bar chart based on the input values
     for (fun=0;fun<values.length;fun++) {
         if (chart == null) {
             bars[fun] = [];
+            bars_top_caps[fun] = [];
             over_areas[fun] = [];
         }
 
@@ -1157,23 +1165,27 @@ function drawBarChart (widget) {
                 if (i%gaps_x_frequency == 0) {
                     paper.text(x,y+y_margin,values[fun][i].x).attr(Aquarious.txt2);
                     paper.path(Raphael.format("M{0} {1}V{2}", x, y+8, chart_height+20)).attr({
-                        "stroke-width": bar_stroke_width
+                        "stroke-width": ref_line_stroke_width
                     });
                 }
             }
-            // Draw the chart function bars or updates them
+            // Draw the chart bars or updates them
             y_value = y_chart + Math.abs(chart_height - (chart_height/ceiling)*values[fun][i].y);
-
             path_string[i] = "M"+x+" "+y_value+" L";
-            if (chart == null) {
-                //bars[fun][i] = paper.path(path_string[i]).attr({
-                bars[fun][i] = paper.rect(x-bar_width/2,y,bar_width,0).attr({
-                    stroke: color[fun],
-                    fill: color[fun],                    
-                    "stroke-width" : function_bar_width,
-                    "stroke-linejoin": "round",
+            if (chart == null) {                
+                bars[fun][i] = paper.rect(x-bar_width/2, y, bar_width, 0, bar_rounded_radius).attr({
+                    "stroke-width" : 0,
+                    fill: color[fun],
+                    "fill-opacity": bar_opacity,
                     transform: "r180"
-                });    
+                });
+                // Draw the top cap bars aka google analytics bars
+                if (has_bar_top_cap) {
+                    bars_top_caps[fun][i] = paper.rect(x-bar_width/2, y, bar_width, 4).attr({
+                        "stroke-width" : 0,
+                        fill: color[fun]
+                    });
+                }
             }
             animator.handleCustom(bars[fun][i], {
                 event_duration: opt.event_duration - 300,
@@ -1181,7 +1193,15 @@ function drawBarChart (widget) {
             }, {
                 height: y-y_value
             });
-         
+            if (has_bar_top_cap) {
+                animator.handleCustom(bars_top_caps[fun][i], {
+                    event_duration: opt.event_duration - 300,
+                    delay: accumulated_delay - 200
+                }, {
+                    y: y_value
+                });
+            }
+
 
             x_aux[i] = x;
             y_aux[i] = y_value;
@@ -1227,8 +1247,8 @@ function drawBarChart (widget) {
                             ly = 45;
 
                             // Dibuja el popup balloon
-                            var side = "top";                            
-                            if (Math.abs(y-chart_height) + popup_frame.getBBox().height > chart_height) { 
+                            var side = "top";
+                            if (Math.abs(y-chart_height) + popup_frame.getBBox().height > chart_height) {
                                 side = "bottom";
                             }
                             ppp = paper.popup(x, y, popup_label, side, 1);
@@ -1261,14 +1281,14 @@ function drawBarChart (widget) {
                             }, 1);
                         });
                     };
-                }                
+                }
             }
             else {
                 // Removes event handlers of older over_areas
                 over_areas[fun][i].unbindAll();
 
             }
-            over_events(x, y_value, i, fun);            
+            over_events(x, y_value, i, fun);
         }
     }
 
@@ -1286,6 +1306,7 @@ function drawBarChart (widget) {
     chart.popup_label = popup_label;
     chart.popup_frame = popup_frame;
     chart.bars = bars;
+    chart.bars_top_caps = bars_top_caps;
     chart.over_areas = over_areas;
     chart.ceiling = ceiling;
 
@@ -1323,9 +1344,9 @@ function drawBarChart (widget) {
  *                               default false
  *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
  *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - function_line_width  | The width in pixels of the chart function line(s)
- *      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - line_width  | The width in pixels of the chart function line(s)
+ *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
@@ -1378,9 +1399,9 @@ function drawLineChart (widget) {
     path_string = [],
     path_string_fill,
     line_stroke_width = .2,
-    function_line_width = opt.function_line_width,
-    function_dot_width = opt.function_dot_width,
-    color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color),
+    line_width = opt.line_width,
+    dot_width = opt.dot_width,
+    color = opt.line_colors ? opt.line_colors : new Array(Aquarious.color),
     dots = [],
     fill = [],
     over_areas = [],
@@ -1553,7 +1574,7 @@ function drawLineChart (widget) {
                 if (chart == null) {
                     lines[fun][i] = paper.path(path_string[i]).attr({
                         stroke: color[fun],
-                        "stroke-width" : function_line_width,
+                        "stroke-width" : line_width,
                         "stroke-linejoin": "round"
                     });
                     lines_set[fun].push(lines[fun][i]);
@@ -1601,14 +1622,14 @@ function drawLineChart (widget) {
                 // if odd, just change the width of the line which si es impar tan solo cambiamos el grosor de la linea que corresponde para superponerla con las pares
                 if (number_lines > 1 && number_lines%2 == 1) {
                     lines[fun][i-1].attr({
-                        "stroke-width" : function_line_width/number_lines
+                        "stroke-width" : line_width/number_lines
                     });
                 }
                 // known the number of lines to draw, if even, draw them
                 if (number_lines > 1 && number_lines%2 == 0) {
                     fun_index.push(fun);
                     angle = Raphael.angle(x_aux[i-1],y_aux[i-1],x_aux[i],y_aux[i]);
-                    path_aux_size = function_line_width/2;
+                    path_aux_size = line_width/2;
                     // Obtenemos pares de lineas perpendiculares en origen y final para trazar desde ahi las lineas paralelas
                     perpendicular1_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+90);
                     perpendicular1_end = paper.simpleLine(x_aux[i],y_aux[i],path_aux_size,angle+90);
@@ -1626,7 +1647,7 @@ function drawLineChart (widget) {
                         path_string_aux = Raphael.format("M{0},{1} L", point_aux_origin.x, point_aux_origin.y);
                         parallel1 = paper.path(path_string_aux).attr({
                             stroke: color[fun_index[j]],
-                            "stroke-width" : (function_line_width/number_lines)+.5
+                            "stroke-width" : (line_width/number_lines)+.5
                         });
                         path_string_aux += Raphael.format("{0} {1}z", point_aux_end.x, point_aux_end.y);
                         if (chart == null) {
@@ -1655,7 +1676,7 @@ function drawLineChart (widget) {
                         path_string_aux = Raphael.format("M{0},{1} L", point_aux_origin.x, point_aux_origin.y);
                         parallel2 = paper.path(path_string_aux).attr({
                             stroke: color[fun_index[j+Math.floor(number_lines/2)]],
-                            "stroke-width" : (function_line_width/number_lines)+.5
+                            "stroke-width" : (line_width/number_lines)+.5
                         });
                         path_string_aux += Raphael.format("{0} {1}z", point_aux_end.x, point_aux_end.y);
                         if (chart == null) {
@@ -1689,14 +1710,14 @@ function drawLineChart (widget) {
                         delay: accumulated_delay - 200,
                         easing: '>'
                     }, {
-                        "stroke-width" : 0//function_dot_width*2
+                        "stroke-width" : 0//dot_width*2
                     });
                     animator.handleCustom(dots[fun_index[fun_index_pointer]][i], {
                         event_duration: opt.event_duration - 300,
                         delay: accumulated_delay - 200,
                         easing: '>'
                     }, {
-                        "stroke-width" : 0//function_dot_width*2
+                        "stroke-width" : 0//dot_width*2
                     });
                     perpendicular1_origin.remove();
                     perpendicular1_end.remove();
@@ -1711,7 +1732,7 @@ function drawLineChart (widget) {
             if (chart == null) {
                 dots[fun][i] = paper.circle(x,y_value,0).attr({
                     stroke: color[fun],
-                    "stroke-width": function_dot_width,
+                    "stroke-width": dot_width,
                     fill: color[fun]
                 });
                 dots_set[fun].push(dots[fun][i]);
@@ -1720,7 +1741,7 @@ function drawLineChart (widget) {
                     delay: accumulated_delay,
                     easing: 'elastic'
                 }, {
-                    r: function_dot_width
+                    r: dot_width
                 });
             } else {
                 animator.handleCustom(dots[fun][i], {
@@ -1729,7 +1750,7 @@ function drawLineChart (widget) {
                 }, {
                     cx: x,
                     cy: y_value,
-                    "stroke-width": function_dot_width
+                    "stroke-width": dot_width
                 });
             }
 
@@ -1953,40 +1974,40 @@ function drawLineChart (widget) {
 
 
 /**
-*  Draw a spider chart based in the number of values and the number of possible levels.
-*
-*  Options available:
-*
-*      Default:
-*      - width
-*      - height
-*      - value (must have) | monofunction - array with numbers which represent
-*                                           the values of the chart function in
-*                                           clockwise orther, starting at "12hours".
-*                              OR
-*                            multifunction - array of arrays which represent multiple
-*                                            chart functions, each one composed of different values.
-*      - has_animation
-*      - delay
-*      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
-*      - easing
-*
-*
-*      Custom:
-*      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
-*      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
-*      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
-*      - function_line_colors | (must have if multifunction) array of strings with the color code of every chart function line
-*      - function_line_width  | The width in pixels of the chart function line(s)
-*      - function_dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
-*      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
-*      - popup_background     | The color code of the popup background
-*      - popup_opacity        | The opacity 0-1 of the popup background
-*
-*  @return the widget object
-*
-*  @author Hal9000
-*/
+ *  Draw a spider chart based in the number of values and the number of possible levels.
+ *
+ *  Options available:
+ *
+ *      Default:
+ *      - width
+ *      - height
+ *      - value (must have) | monofunction - array with numbers which represent
+ *                                           the values of the chart function in
+ *                                           clockwise orther, starting at "12hours".
+ *                              OR
+ *                            multifunction - array of arrays which represent multiple
+ *                                            chart functions, each one composed of different values.
+ *      - has_animation
+ *      - delay
+ *      - event_duration    | milliseconds between each value dot is thrown from the center of coordiantes
+ *      - easing
+ *
+ *
+ *      Custom:
+ *      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
+ *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
+ *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
+ *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - line_width  | The width in pixels of the chart function line(s)
+ *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
+ *      - popup_background     | The color code of the popup background
+ *      - popup_opacity        | The opacity 0-1 of the popup background
+ *
+ *  @return the widget object
+ *
+ *  @author Hal9000
+ */
 function drawSpider(widget) {
     var spider = widget.svg,
     paper = widget.paper,
@@ -2006,8 +2027,8 @@ function drawSpider(widget) {
     multifun = values[0] instanceof Array,
     fun = 0,
     fun_aux,
-    function_line_width = opt.function_line_width,
-    function_dot_width = opt.function_dot_width,
+    line_width = opt.line_width,
+    dot_width = opt.dot_width,
     stroke_width = .8,
     stroke_color = "#BBB",
     levels = labels.length < 3 ? 3 : labels.length,
@@ -2079,7 +2100,7 @@ function drawSpider(widget) {
     over_radius = interval*.6,
     parallel_set = paper.set(),
     fill_opacity = opt.no_fill ? 0 : 0.2,
-    color = opt.function_line_colors ? opt.function_line_colors : new Array(Aquarious.color);
+    color = opt.line_colors ? opt.line_colors : new Array(Aquarious.color);
 
     // Si solo hay una funcion a dibujar, la metemos en un array para mantener la
     // uniformidad de acceso independientemente del numero de funciones.
@@ -2188,15 +2209,15 @@ function drawSpider(widget) {
                 animator.pushToTimelineDelayed(dots[fun][i], {
                     cx: coord_x,
                     cy: coord_y,
-                    r: function_dot_width/2,
-                    "stroke-width": function_dot_width/2
+                    r: dot_width/2,
+                    "stroke-width": dot_width/2
                 });
             } else {
                 animator.pushToTimelineUndelayed(dots[fun][i], {
                     cx: coord_x,
                     cy: coord_y,
-                    r: function_dot_width/2,
-                    "stroke-width": function_dot_width/2
+                    r: dot_width/2,
+                    "stroke-width": dot_width/2
                 });
             }
 
@@ -2355,7 +2376,7 @@ function drawSpider(widget) {
                 fill: color[fun],
                 "fill-opacity": fill_opacity,
                 opacity: 0,
-                "stroke-width": function_line_width,
+                "stroke-width": line_width,
                 "stroke-linejoin": "round"
             });
             animator.pushToTimelineCustom(shape[fun], {
@@ -2404,7 +2425,7 @@ function drawSpider(widget) {
                 if (number_lines > 1) {
                     fun_index.push(fun);
                     angle = Raphael.angle(x_aux[i-1],y_aux[i-1],x_aux[j],y_aux[j]);
-                    path_aux_size = function_line_width/2;
+                    path_aux_size = line_width/2;
                     // Obtenemos pares de lineas perpendiculares en origen y final para trazar desde ahi las lineas paralelas
                     perpendicular1_origin = paper.simpleLine(x_aux[i-1],y_aux[i-1],path_aux_size,angle+90);
                     perpendicular1_end = paper.simpleLine(x_aux[j],y_aux[j],path_aux_size,angle+90);
@@ -2422,7 +2443,7 @@ function drawSpider(widget) {
                         path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", point_aux_origin.x, point_aux_origin.y, point_aux_end.x, point_aux_end.y);
                         parallel1 = paper.path(path_string_aux).attr({
                             stroke: color[fun_index[k]],
-                            "stroke-width" : (function_line_width/number_lines)+.5,
+                            "stroke-width" : (line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
                         //                        parallel1.animate(Raphael.animation({
@@ -2435,7 +2456,7 @@ function drawSpider(widget) {
                         path_string_aux = Raphael.format("M{0},{1} L{2} {3}z", point_aux_origin.x, point_aux_origin.y, point_aux_end.x, point_aux_end.y);
                         parallel2 = paper.path(path_string_aux).attr({
                             stroke: color[fun_index[k+Math.floor(number_lines/2)]],
-                            "stroke-width" : (function_line_width/number_lines)+.5,
+                            "stroke-width" : (line_width/number_lines)+.5,
                             "stroke-opacity": 0
                         });
 
@@ -2482,11 +2503,11 @@ function drawSpider(widget) {
                         shape_points_array[fun][j].y == shape_points_array[fun_aux][j].y) {
                         if (spider == null) {
                             animator.pushToTimelineUndelayed(dots[fun_aux][j], {
-                                "stroke-width" : function_dot_width*1.2
+                                "stroke-width" : dot_width*1.2
                             });
                         } else {
                             animator.handle(dots[fun_aux][j], {
-                                "stroke-width" : function_dot_width*1.2
+                                "stroke-width" : dot_width*1.2
                             });
                         }
                     }

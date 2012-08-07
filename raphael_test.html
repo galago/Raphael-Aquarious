@@ -38,6 +38,7 @@
                     thermometer1.updateValue(getRandomInt(0,31));
                     thermometer2.updateValue(getRandomInt(0,19));
                     bar_chart1.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
+                    bar_chart1_alt.updateValue([{x:2005, y:getRandomInt(0,12)},{x:2006, y:getRandomInt(0,12)},{x:2007, y:getRandomInt(0,12)},{x:2008, y:getRandomInt(0,12)},{x:2009, y:getRandomInt(0,12)},{x:2010, y:getRandomInt(0,12)},{x:2011, y:getRandomInt(0,12)}]);
                     bar_chart2.updateValue([{x:2005, y:getRandomInt(0,11)},{x:2006, y:getRandomInt(0,11)},{x:2007, y:getRandomInt(0,11)},{x:2008, y:getRandomInt(0,11)},{x:2009, y:getRandomInt(0,11)},{x:2010, y:getRandomInt(0,11)},{x:2011, y:getRandomInt(0,11)}]);
                     //                    chart1.updateValue();
                     //                    chart2.updateValue();
@@ -186,6 +187,18 @@
                     id_holder: "holder_bar_chart1",
                     width: r_width,
                     height: r_height,
+                    bar_rounded_radius: 7,
+                    bar_opacity: .8,
+                    value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
+                    easing: 'backOut'
+                });
+                bar_chart1_alt = new Widget({
+                    type: "bar_chart",
+                    id_holder: "holder_bar_chart1_alt",
+                    width: r_width,
+                    height: r_height,
+                    bar_opacity: .4,
+                    bar_top_cap: true,
                     value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
                     easing: 'backOut'
                 });
@@ -195,7 +208,7 @@
                     width: r_width/2,
                     height: r_height,
                     value: [{x:2005, y:2},{x:2006, y:4},{x:2007, y:6},{x:2008, y:8},{x:2009, y:1},{x:2010, y:5},{x:2011, y:10}],
-                    function_line_colors:["#5398C1"],
+                    line_colors:["#5398C1"],
                     event_duration: 1500,
                     easing: 'elastic'
                 });
@@ -205,7 +218,7 @@
                     width: 300,
                     height: 300,
                     value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
-                    function_line_colors:["#FF3300"],
+                    line_colors:["#FF3300"],
                     popup_background_color:"#E0E0E0",
                     no_fill: false,
                     has_animation: false
@@ -227,9 +240,9 @@
                     width: 300,
                     height: 300,
                     value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
-                    function_line_width:3,
-                    function_dot_width:0,
-                    function_line_colors:["#FF3300"],
+                    line_width:3,
+                    dot_width:0,
+                    line_colors:["#FF3300"],
                     popup_background_color:"#E0E0E0",
                     no_fill: false,
                     has_animation: false
@@ -240,9 +253,9 @@
                     width: 900,
                     height: 300,
                     value: [{"x":"01-11","y":0},{"x":"02-11","y":10},{"x":"03-11","y":1},{"x":"04-11","y":3},{"x":"05-11","y":0},{"x":"06-11","y":0},{"x":"07-11","y":2},{"x":"08-11","y":5},{"x":"09-11","y":0},{"x":"10-11","y":21},{"x":"11-11","y":5},{"x":"12-11","y":1},{"x":"13-11","y":0},{"x":"14-11","y":4},{"x":"15-11","y":8},{"x":"16-11","y":30},{"x":"17-11","y":3},{"x":"18-11","y":0},{"x":"19-11","y":0},{"x":"20-11","y":0},{"x":"21-11","y":5},{"x":"22-11","y":11},{"x":"23-11","y":0},{"x":"24-11","y":0},{"x":"25-11","y":0},{"x":"26-11","y":0},{"x":"27-11","y":0},{"x":"28-11","y":0},{"x":"29-11","y":0},{"x":"30-11","y":0},{"x":"01-12","y":0},{"x":"02-12","y":0},{"x":"03-12","y":0},{"x":"04-12","y":0},{"x":"05-12","y":0},{"x":"06-12","y":0},{"x":"07-12","y":0},{"x":"08-12","y":0},{"x":"09-12","y":0},{"x":"10-12","y":0},{"x":"11-12","y":0},{"x":"12-12","y":0},{"x":"13-12","y":0},{"x":"14-12","y":0},{"x":"15-12","y":0},{"x":"16-12","y":0},{"x":"17-12","y":0},{"x":"18-12","y":0},{"x":"19-12","y":0},{"x":"20-12","y":0},{"x":"21-12","y":0},{"x":"22-12","y":0},{"x":"23-12","y":0},{"x":"24-12","y":0},{"x":"25-12","y":0},{"x":"26-12","y":0},{"x":"27-12","y":0},{"x":"28-12","y":0},{"x":"29-12","y":0},{"x":"30-12","y":0},{"x":"31-12","y":0},{"x":"01-01","y":0},{"x":"02-01","y":0},{"x":"03-01","y":0},{"x":"04-01","y":0}],
-                    function_line_width:3,
-                    function_dot_width:0,
-                    function_line_colors:["#FF3300"],
+                    line_width:3,
+                    dot_width:0,
+                    line_colors:["#FF3300"],
                     popup_background_color:"#E0E0E0",
                     no_fill: false,
                     has_animation: false
@@ -256,9 +269,9 @@
                     value: [[{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}],
                         [{x:2005, y:2},{x:2006, y:0},{x:2007, y:0},{x:2008, y:0},{x:2009, y:0},{x:2010, y:0},{x:2011, y:0}]],
                     value_text: "impago",
-                    function_line_width:3,
-                    function_dot_width:4,
-                    function_line_colors:["#3494FA","#FA3834"],
+                    line_width:3,
+                    dot_width:4,
+                    line_colors:["#3494FA","#FA3834"],
                     popup_background_color:"#E0E0E0",
                     no_fill: true,
                     delay: 1000,
@@ -274,10 +287,10 @@
                         [{x:2005, y:213 },{x:2006, y:233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:0},{x:2010, y:523},{x:2011, y:89}]],
                     financial_mode: true,
                     financial_max: 500,
-                    function_line_width: 8,
-                    function_dot_width: 7,
-                    function_line_colors:["#288DFA","#FA2B28"],
-                    function_line_colors:["#3494FA","#FA3834"],
+                    line_width: 8,
+                    dot_width: 7,
+                    line_colors:["#288DFA","#FA2B28"],
+                    line_colors:["#3494FA","#FA3834"],
                     popup_background_color: "#999",
                     no_fill: true
                 });
@@ -292,9 +305,9 @@
                         [{x:2005, y:1213 },{x:2006, y:2233},{x:2007, y:2012},{x:2008, y:540},{x:2009, y:890},{x:2010, y:1245},{x:2011, y:89}]],
                     financial_mode: true,
                     financial_max: 500,
-                    function_line_width: 9,
-                    function_dot_width: 7,
-                    function_line_colors:["#91FF22","#2190FF","#FF2190"],
+                    line_width: 9,
+                    dot_width: 7,
+                    line_colors:["#91FF22","#2190FF","#FF2190"],
                     no_fill: true,
                     delay: 2000,
                     event_duration: 500
@@ -310,9 +323,9 @@
                 //                line_chart = create2AxisGraph (chart_paper43, 800, 300, chart_values, {
                 //                    financial_mode: true,
                 //                    financial_max: 500,
-                //                    function_line_width: 9,
-                //                    function_dot_width: 7,
-                //                    function_line_colors:["#EA0063","#EA8600","#00EA86","#0063EA"],
+                //                    line_width: 9,
+                //                    dot_width: 7,
+                //                    line_colors:["#EA0063","#EA8600","#00EA86","#0063EA"],
                 //                    no_fill: true,
                 //                    delay: 3000,
                 //                    interval: 600
@@ -343,9 +356,9 @@
                     value: spider_values,
                     max_value: 5,
                     value_text: "impago",
-                    function_line_width: 8,
-                    function_dot_width: 10,
-                    function_line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
+                    line_width: 8,
+                    dot_width: 10,
+                    line_colors:["#EE6831","#3B5998","#FDD12A","#79A845","#FF00FE","#F00402"],
                     no_fill: true,
                     event_duration: 300
                 });
@@ -368,10 +381,10 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "cacharro",
-                    function_line_width: 8,
-                    function_dot_width: 15,
+                    line_width: 8,
+                    dot_width: 15,
                     event_duration: 600,
-                    function_line_colors:["#FDD12A","#F00402"],
+                    line_colors:["#FDD12A","#F00402"],
                     no_fill: true
                 });
 
@@ -389,8 +402,8 @@
                     value: spider_values,
                     max_value: 8,
                     value_text: "novia",
-                    function_line_width: 14,
-                    function_dot_width: 16,
+                    line_width: 14,
+                    dot_width: 16,
                     has_animation: false
                 });
 
@@ -417,9 +430,9 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "impago",
-                    function_line_width: 9,
-                    function_dot_width: 13,
-                    function_line_colors:["#91FF22","#2190FF","#FF2190"],
+                    line_width: 9,
+                    dot_width: 13,
+                    line_colors:["#91FF22","#2190FF","#FF2190"],
                     no_fill: true
                 });
 
@@ -438,7 +451,7 @@
                     value: spider_values,
                     max_value: 6,
                     value_text: "impago",
-                    function_dot_width: 0
+                    dot_width: 0
                 });
 
 
@@ -463,6 +476,7 @@
         <div id="holder_thermometer2"></div>
 
         <div id="holder_bar_chart1"></div>        
+        <div id="holder_bar_chart1_alt"></div>        
         <div id="holder_bar_chart2"></div>        
         <div id="holder_bar_chart3"></div>        
         <div id="holder_bar_chart4"></div>        
