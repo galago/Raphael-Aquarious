@@ -14,7 +14,7 @@
  */
 Aquarious = {
     lang_ui: "ES",
-    currency: 'â‚¬',
+    currency: '€',
     thousands: '.',
     decimal: ',',
     color: "#EE6831",
@@ -453,8 +453,8 @@ function Options(options) {
                 this.value_text = options.value_text != null ? " "+options.value_text : "";
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
                 this.line_colors = options.line_colors != null ? options.line_colors : null;
-                this.line_width = options.line_width != null ? options.line_width : 4;
-                this.dot_width = options.dot_width != null ? options.dot_width : 4;
+                this.line_width = options.line_width != null ? options.line_width : 6;
+                this.dot_width = options.dot_width != null ? options.dot_width : 12;
                 break;
             case "spider":
                 if (options.labels != null && options.value != null && options.max_value != null ) {
@@ -465,7 +465,7 @@ function Options(options) {
                 this.no_fill = options.no_fill != null ? options.no_fill : false;
                 this.line_colors = options.line_colors != null ? options.line_colors : null;
                 this.line_width = options.line_width != null ? options.line_width : 6;
-                this.dot_width = options.dot_width != null ? options.dot_width : 8;
+                this.dot_width = options.dot_width != null ? options.dot_width : 12;
                 break;
             case "___template":
                 this._______ = options._______ != null ? options._______ : null;
@@ -939,7 +939,7 @@ function drawThermometer(widget) {
         - bar_rounded_radius   | The bar rounded radius in px
         - bar_top_cap          | true||false if the bar will have a top cap in the style of google analytics, need a bar_opacity value to see the effect
         - bar_gap              | The gap between bars - 'none', 'small', 'medium', 'large'
- *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - dot_width            | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
@@ -1368,9 +1368,9 @@ function drawBarChart (widget) {
  *                               default false
  *      - financial_max        | The max value before start to jump proportionaly as described in the X axis
  *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - line_width  | The width in pixels of the chart function line(s)
- *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - line_colors          | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - line_width           | The width in pixels of the chart function line(s)
+ *      - dot_width            | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
@@ -1756,7 +1756,7 @@ function drawLineChart (widget) {
             if (chart == null) {
                 dots[fun][i] = paper.circle(x,y_value,0).attr({
                     stroke: color[fun],
-                    "stroke-width": dot_width,
+                    "stroke-width": dot_width/2,
                     fill: color[fun]
                 });
                 dots_set[fun].push(dots[fun][i]);
@@ -1765,7 +1765,7 @@ function drawLineChart (widget) {
                     delay: accumulated_delay,
                     easing: 'elastic'
                 }, {
-                    r: dot_width
+                    r: dot_width/2
                 });
             } else {
                 animator.handleCustom(dots[fun][i], {
@@ -1774,7 +1774,7 @@ function drawLineChart (widget) {
                 }, {
                     cx: x,
                     cy: y_value,
-                    "stroke-width": dot_width
+                    "stroke-width": dot_width/2
                 });
             }
 
@@ -2021,9 +2021,9 @@ function drawLineChart (widget) {
  *      - labels    (must have)| an array of strings with the labels of each axis. The chart will have as many axis as strings in this array
  *      - max_value (must have)| the cieling value of the outer ring, if any value is higher it will be shown in the popup the real one but rounded to this max in the chart
  *      - no_fill              | if true the widget won't paint a semitransparent fill under the line of the function chart, default false.
- *      - line_colors | (must have if multifunction) array of strings with the color code of every chart function line
- *      - line_width  | The width in pixels of the chart function line(s)
- *      - dot_width   | The width in pixels of the dots that represent a pair {x,y} inside a function line
+ *      - line_colors          | (must have if multifunction) array of strings with the color code of every chart function line
+ *      - line_width           | The width in pixels of the chart function line(s)
+ *      - dot_width            | The width in pixels of the dots that represent a pair {x,y} inside a function line
  *      - value_text           | The string which will be appended to the value inside the popup in singular, plural is automatic.
  *      - popup_background     | The color code of the popup background
  *      - popup_opacity        | The opacity 0-1 of the popup background
